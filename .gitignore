@@ -1,0 +1,11 @@
+# Build output – regenerate with: npm run build
+dist
+
+# Dependencies
+node_modules
+
+# Local env / editor
+.env
+.env.local
+*.log
+.DS_Store

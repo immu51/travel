@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hero background slider */
+.hero-bg-slider {
+  isolation: isolate;
+}
+.hero-bg-slide {
+  transition: opacity 1s ease-in-out;
+}
+
+/* Glassmorphism */
+.card-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(13, 27, 42, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.card-glass:hover {
+  box-shadow: 0 8px 32px rgba(13, 27, 42, 0.12);
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-6px);
+}
+
+.gallery-item:hover .hover-zoom,
+.package-card:hover .hover-zoom {
+  transform: scale(1.08);
+}
+.hover-zoom {
+  transition: transform 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+.animation-delay-200 { animation-delay: 0.2s; opacity: 0; }
+.animation-delay-400 { animation-delay: 0.4s; opacity: 0; }
+
+.navbar-solid {
+  background: rgba(248, 249, 250, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 20px rgba(13, 27, 42, 0.06);
+}
+
+html { scroll-behavior: smooth; }
+
+a:focus-visible, button:focus-visible {
+  outline: 2px solid #F4A261;
+  outline-offset: 2px;
+}
+
+.form-message {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+}
+.form-message.success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+.form-message.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+
+.gallery-masonry .gallery-item {
+  overflow: hidden;
+}
