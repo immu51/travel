@@ -13,7 +13,9 @@ const DEFAULT_OPTIONS = {
 export function useInView(options = {}) {
   const ref = useRef(null)
   const [inView, setInView] = useState(false)
-  const opts = { ...DEFAULT_OPTIONS, ...options }
+  const threshold = options.threshold ?? DEFAULT_OPTIONS.threshold
+  const rootMargin = options.rootMargin ?? DEFAULT_OPTIONS.rootMargin
+  const triggerOnce = options.triggerOnce ?? DEFAULT_OPTIONS.triggerOnce
 
   useEffect(() => {
     const el = ref.current
@@ -21,19 +23,20 @@ export function useInView(options = {}) {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
+        if (!entry) return
         if (entry.isIntersecting) {
           setInView(true)
-          if (opts.triggerOnce) observer.unobserve(entry.target)
-        } else if (!opts.triggerOnce) {
+          if (triggerOnce) observer.unobserve(entry.target)
+        } else if (!triggerOnce) {
           setInView(false)
         }
       },
-      { threshold: opts.threshold, rootMargin: opts.rootMargin }
+      { threshold, rootMargin }
     )
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [opts.threshold, opts.rootMargin, opts.triggerOnce])
+  }, [threshold, rootMargin, triggerOnce])
 
   return [ref, inView]
 }

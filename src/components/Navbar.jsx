@@ -17,6 +17,7 @@ const navLinks = [
 export default function Navbar() {
   const [solid, setSolid] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [logoError, setLogoError] = useState(false)
   const location = useLocation()
   const isHome = location.pathname === '/'
 
@@ -46,8 +47,16 @@ export default function Navbar() {
             onClick={(e) => handleNavClick(e, '#home')}
             className="flex items-center gap-2"
           >
+            {!logoError && (
+              <img
+                src="/logo.png"
+                alt=""
+                className="h-8 md:h-9 w-auto object-contain"
+                onError={() => setLogoError(true)}
+              />
+            )}
             <span className={`font-heading font-bold text-xl transition-colors ${useSolid ? 'text-primary' : 'text-white'}`}>
-              TravelIndia
+              Tour & Travel
             </span>
           </a>
           <ul className="hidden md:flex items-center gap-8">

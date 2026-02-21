@@ -7,7 +7,7 @@ const FORMSPREE_URL = (id) => `https://formspree.io/f/${id}`
 export default function Contact() {
   const [contactMsg, setContactMsg] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const formspreeId = import.meta.env.VITE_FORMSPREE_FORM_ID
+  const formspreeId = (import.meta.env.VITE_FORMSPREE_FORM_ID || '').trim()
 
   const handleContactSubmit = async (e) => {
     e.preventDefault()
@@ -28,16 +28,25 @@ export default function Contact() {
         const res = await fetch(FORMSPREE_URL(formspreeId), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, message }),
+          body: JSON.stringify({
+            _subject: `Contact form: ${name}`,
+            name,
+            email,
+            phone: phone || '(not provided)',
+            message,
+          }),
         })
         if (res.ok) {
           setContactMsg({
             type: 'success',
-            text: 'Thank you! Your message has been sent. We will get back to you soon.',
+            text: 'Thank you! Your message has been sent. We will get back to you soon. (Check inbox and Spam for the email.)',
           })
           form.reset()
         } else {
-          setContactMsg({ type: 'error', text: 'Could not send message. Please try again or contact us on WhatsApp.' })
+          const errMsg = res.status === 422
+            ? 'Invalid form or Formspree limit reached. Check CONTACT-FORM-SETUP.md or try later.'
+            : 'Could not send message. Please try again or contact us on WhatsApp.'
+          setContactMsg({ type: 'error', text: errMsg })
         }
       } catch (_) {
         setContactMsg({ type: 'error', text: 'Could not send message. Please try again or contact us on WhatsApp.' })
@@ -48,10 +57,9 @@ export default function Contact() {
     }
 
     setContactMsg({
-      type: 'success',
-      text: 'Thank you! We will get back to you soon. You can also reach us on WhatsApp for faster response.',
+      type: 'error',
+      text: 'Email not set up. Add VITE_FORMSPREE_FORM_ID in .env (see CONTACT-FORM-SETUP.md). Or contact us on WhatsApp.',
     })
-    form.reset()
   }
 
   return (

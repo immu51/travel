@@ -126,7 +126,7 @@ export default function Packages() {
         </AnimateIn>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {packages.map((pkg, i) => (
-            <AnimateIn key={pkg.title} variant="fadeUpScale" delay={120 + i * 70}>
+            <AnimateIn key={pkg.slug} variant="fadeUpScale" delay={120 + i * 70}>
               <article className="package-card package-card-premium rounded-card overflow-hidden bg-bg shadow-soft">
                 {pkg.slug ? (
                   <Link to={`/tour/${pkg.slug}`} className="block">
