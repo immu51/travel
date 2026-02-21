@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { whatsappUrl } from '../constants'
 import { scrollToSection } from '../utils/scroll'
 
@@ -13,6 +14,8 @@ const navLinks = [
 export default function Navbar() {
   const [solid, setSolid] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const location = useLocation()
+  const isHome = location.pathname === '/'
 
   useEffect(() => {
     const onScroll = () => setSolid(window.scrollY > 80)
@@ -21,26 +24,36 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const linkHref = (hash) => (isHome ? hash : `/${hash}`)
+  const handleNavClick = (e, href) => {
+    if (isHome) scrollToSection(e, href)
+  }
+  const useSolid = solid || !isHome
+
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${solid ? 'navbar-solid' : ''}`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        useSolid ? 'navbar-solid' : 'navbar-over-hero'
+      }`}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           <a
-            href="#home"
-            onClick={(e) => scrollToSection(e, '#home')}
+            href={linkHref('#home')}
+            onClick={(e) => handleNavClick(e, '#home')}
             className="flex items-center gap-2"
           >
-            <span className="font-heading font-bold text-xl text-primary">TravelIndia</span>
+            <span className={`font-heading font-bold text-xl transition-colors ${useSolid ? 'text-primary' : 'text-white'}`}>
+              TravelIndia
+            </span>
           </a>
           <ul className="hidden md:flex items-center gap-8">
             {navLinks.map(({ href, label }) => (
               <li key={href}>
                 <a
-                  href={href}
-                  onClick={(e) => scrollToSection(e, href)}
-                  className="font-medium transition-colors text-primary hover:text-accent"
+                  href={linkHref(href)}
+                  onClick={(e) => handleNavClick(e, href)}
+                  className={`font-medium transition-colors ${useSolid ? 'text-primary hover:text-accent' : 'text-white hover:text-white/90'}`}
                 >
                   {label}
                 </a>
@@ -58,7 +71,7 @@ export default function Navbar() {
           </a>
           <button
             type="button"
-            className="md:hidden p-2 text-primary"
+            className={`md:hidden p-2 transition-colors ${useSolid ? 'text-primary' : 'text-white'}`}
             aria-label="Open menu"
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen((o) => !o)}
@@ -72,9 +85,9 @@ export default function Navbar() {
           {navLinks.map(({ href, label }) => (
             <a
               key={href}
-              href={href}
+              href={linkHref(href)}
               onClick={(e) => {
-                scrollToSection(e, href)
+                handleNavClick(e, href)
                 setMobileOpen(false)
               }}
               className="block py-2 text-primary font-medium"

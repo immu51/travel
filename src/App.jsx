@@ -1,31 +1,31 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import Hero from './components/Hero'
-import WhyChoose from './components/WhyChoose'
-import Packages from './components/Packages'
-import About from './components/About'
-import Gallery from './components/Gallery'
-import Testimonials from './components/Testimonials'
-import CTA from './components/CTA'
-import Contact from './components/Contact'
 import Footer from './components/Footer'
 import WhatsAppFloat from './components/WhatsAppFloat'
+import Home from './pages/Home'
+import TourDetailPage from './pages/TourDetailPage'
 
 export default function App() {
   return (
-    <div className="font-body text-text antialiased bg-bg">
-      <Navbar />
-      <main>
-        <Hero />
-        <WhyChoose />
-        <Packages />
-        <About />
-        <Gallery />
-        <Testimonials />
-        <CTA />
-        <Contact />
-      </main>
-      <Footer />
-      <WhatsAppFloat />
-    </div>
+    <BrowserRouter>
+      <div className="font-body text-text antialiased bg-bg">
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <Navbar />
+                <main>
+                  <Home />
+                </main>
+                <Footer />
+                <WhatsAppFloat />
+              </>
+            }
+          />
+          <Route path="/tour/:slug" element={<TourDetailPage />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   )
 }

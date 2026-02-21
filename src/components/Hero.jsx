@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { scrollToSection } from '../utils/scroll'
 
 const heroImages = [
-  { url: 'https://images.unsplash.com/photo-1569336415962-a4bd9f69cd83?w=1920&q=85', alt: 'India tour - scenic view' },
-  { url: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1920&q=85', alt: 'Agra monument - Taj Mahal' },
+  { url: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1920&q=85', alt: 'Taj Mahal - Agra' },
   { url: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=1920&q=85', alt: 'Lal Quila - Red Fort Delhi' },
   { url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1920&q=85', alt: 'Ladakh monastery - North India monument' },
 ]

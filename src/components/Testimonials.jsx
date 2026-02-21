@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import AnimateIn from './AnimateIn'
 
 const testimonials = [
   {
@@ -39,12 +40,17 @@ export default function Testimonials() {
   return (
     <section id="testimonials" className="py-20 md:py-28 bg-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary text-center mb-4">
-          What Our Travelers Say
-        </h2>
-        <p className="text-center text-text/80 max-w-2xl mx-auto mb-16">
-          Our happy travelers trust us as the best tour and travel agency in India.
-        </p>
+        <AnimateIn variant="fadeUp" className="text-center mb-4">
+          <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">
+            What Our Travelers Say
+          </h2>
+        </AnimateIn>
+        <AnimateIn variant="fadeUp" delay={100} className="text-center mb-16">
+          <p className="text-text/80 max-w-2xl mx-auto">
+            Our happy travelers trust us as the best tour and travel agency in India.
+          </p>
+        </AnimateIn>
+        <AnimateIn variant="fadeUpScale" delay={150}>
         <div className="relative">
           <div className="overflow-hidden">
             {testimonials.map((t, i) => (
@@ -88,6 +94,7 @@ export default function Testimonials() {
             </button>
           </div>
         </div>
+        </AnimateIn>
       </div>
     </section>
   )

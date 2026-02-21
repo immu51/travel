@@ -1,4 +1,5 @@
 import { CITY_NAME } from '../constants'
+import AnimateIn from './AnimateIn'
 
 const points = [
   { badge: '5+', label: 'Years Experience' },
@@ -27,7 +28,8 @@ export default function About() {
     <section id="about" className="py-20 md:py-28 bg-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div>
+          <AnimateIn variant="slideRight" className="flex flex-col">
+            <div>
             <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary mb-6">
               About Our Travel Agency
             </h2>
@@ -46,7 +48,9 @@ export default function About() {
                 </li>
               ))}
             </ul>
-          </div>
+            </div>
+          </AnimateIn>
+          <AnimateIn variant="slideLeft" delay={200}>
           <div className="relative">
             <div className="aspect-[4/3] rounded-card overflow-hidden shadow-glass">
               <img
@@ -56,6 +60,7 @@ export default function About() {
               />
             </div>
           </div>
+          </AnimateIn>
         </div>
       </div>
     </section>

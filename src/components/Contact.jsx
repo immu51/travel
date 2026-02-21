@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CITY_NAME, PHONE, EMAIL, ADDRESS } from '../constants'
+import AnimateIn from './AnimateIn'
 
 export default function Contact() {
   const [contactMsg, setContactMsg] = useState(null)
@@ -24,15 +25,20 @@ export default function Contact() {
   return (
     <section id="contact" className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary text-center mb-4">
-          Contact Our Travel Agency in {CITY_NAME}
-        </h2>
-        <p className="text-center text-text/80 max-w-2xl mx-auto mb-16">
-          Looking for affordable India tour packages? Contact our trusted travel experts today to plan your perfect
-          vacation.
-        </p>
+        <AnimateIn variant="fadeUp" className="text-center mb-4">
+          <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">
+            Contact Our Travel Agency in {CITY_NAME}
+          </h2>
+        </AnimateIn>
+        <AnimateIn variant="fadeUp" delay={100} className="text-center mb-16">
+          <p className="text-text/80 max-w-2xl mx-auto">
+            Looking for affordable India tour packages? Contact our trusted travel experts today to plan your perfect
+            vacation.
+          </p>
+        </AnimateIn>
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          <div className="card-glass rounded-card p-8">
+          <AnimateIn variant="slideRight">
+          <div className="card-glass card-premium rounded-card p-8">
             <h3 className="font-heading font-semibold text-xl text-primary mb-6">Send us a message</h3>
             <form onSubmit={handleContactSubmit} className="space-y-5">
               <div>
@@ -89,6 +95,8 @@ export default function Contact() {
               </button>
             </form>
           </div>
+          </AnimateIn>
+          <AnimateIn variant="slideLeft" delay={150}>
           <div>
             <div className="space-y-6 mb-8">
               <div className="flex items-start gap-4">
@@ -143,6 +151,7 @@ export default function Contact() {
               />
             </div>
           </div>
+          </AnimateIn>
         </div>
       </div>
     </section>
