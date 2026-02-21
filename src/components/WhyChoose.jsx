@@ -1,4 +1,5 @@
 import { CITY_NAME } from '../constants'
+import AnimateIn from './AnimateIn'
 
 const cards = [
   {
@@ -43,21 +44,27 @@ export default function WhyChoose() {
   return (
     <section id="why-choose" className="py-20 md:py-28 bg-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary text-center mb-2">
-          Why Choose Our Travel Agency
-        </h2>
-        <p className="text-center text-text/80 max-w-2xl mx-auto mb-16">
-          Trusted by hundreds of travelers across India for memorable journeys.
-        </p>
+        <AnimateIn variant="fadeUp" className="text-center mb-2">
+          <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">
+            Why Choose Our Travel Agency
+          </h2>
+        </AnimateIn>
+        <AnimateIn variant="fadeUp" delay={100} className="text-center mb-16">
+          <p className="text-text/80 max-w-2xl mx-auto">
+            Trusted by hundreds of travelers across India for memorable journeys.
+          </p>
+        </AnimateIn>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {cards.map(({ icon, title, text }) => (
-            <article key={title} className="card-glass rounded-card p-6 lg:p-8 hover-lift">
+          {cards.map(({ icon, title, text }, i) => (
+            <AnimateIn key={title} variant="fadeUpScale" delay={150 + i * 80}>
+              <article className="card-glass card-premium card-shine rounded-card p-6 lg:p-8 h-full">
               <div className="w-14 h-14 rounded-card bg-accent/20 flex items-center justify-center mb-5">
                 <Icon>{icon}</Icon>
               </div>
               <h3 className="font-heading font-semibold text-lg text-primary mb-3">{title}</h3>
               <p className="text-text/80 text-sm leading-relaxed">{text}</p>
-            </article>
+              </article>
+            </AnimateIn>
           ))}
         </div>
       </div>
