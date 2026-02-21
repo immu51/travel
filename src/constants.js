@@ -1,9 +1,9 @@
 /**
  * App-wide config. Replace with your details before going live.
  */
-export const WHATSAPP_NUMBER = '919876543210'
+export const WHATSAPP_NUMBER = '918279946669'
 export const CITY_NAME = 'Mumbai'
-export const PHONE = '+91 98765 43210'
+export const PHONE = '+91 82799 46669'
 export const EMAIL = 'info@travelindia.com'
 /** Email where Contact form submissions are sent (use this in Formspree when creating the form). */
 export const CONTACT_FORM_RECIPIENT_EMAIL = 'khanjaved11974@gmail.com'
