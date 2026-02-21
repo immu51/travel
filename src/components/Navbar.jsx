@@ -1,3 +1,6 @@
+/**
+ * Navbar: fixed top bar, home/tour links, WhatsApp. On tour page, links go to home + section.
+ */
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { whatsappUrl } from '../constants'

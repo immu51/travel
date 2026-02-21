@@ -1,10 +1,13 @@
-/* Shared tour packages – used by Packages list and TourDetailPage */
-import agraFort1 from '../assets/day1/agra-fort-1.png'
-import agraFort2 from '../assets/day1/agra-fort-2.png'
-import agraFort3 from '../assets/day1/agra-fort-3.png'
-import tajGate from '../assets/day1/taj-gate.png'
-import tajGolden from '../assets/day1/taj-golden.png'
-import tajmahalMarbel from '../assets/day1/Tajmahal_marbel.jpg'
+/**
+ * Tour packages data. Used by Packages (cards) and TourDetailPage (detail by slug).
+ * All images from src/assets: gallery/ (shared) and tours/ (tour-specific).
+ */
+import agraFort1 from '../assets/tours/agra-fort-1.png'
+import agraFort2 from '../assets/tours/agra-fort-2.png'
+import agraFort3 from '../assets/tours/agra-fort-3.png'
+import tajGate from '../assets/tours/taj-gate.png'
+import tajGolden from '../assets/tours/taj-golden.png'
+import tajmahalMarbel from '../assets/tours/Tajmahal_marbel.jpg'
 import tajMahalImg from '../assets/gallery/taj-mahal.jpg'
 
 export const TOUR_SLUG_DAY1_TAJ_LAL = 'day1-taj-lal-quila'

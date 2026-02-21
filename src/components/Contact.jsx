@@ -2,19 +2,51 @@ import { useState } from 'react'
 import { CITY_NAME, PHONE, EMAIL, ADDRESS } from '../constants'
 import AnimateIn from './AnimateIn'
 
+const FORMSPREE_URL = (id) => `https://formspree.io/f/${id}`
+
 export default function Contact() {
   const [contactMsg, setContactMsg] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const formspreeId = import.meta.env.VITE_FORMSPREE_FORM_ID
 
-  const handleContactSubmit = (e) => {
+  const handleContactSubmit = async (e) => {
     e.preventDefault()
     const form = e.target
     const name = form.name.value.trim()
     const email = form.email.value.trim()
+    const phone = (form.phone?.value || '').trim()
     const message = form.message.value.trim()
     if (!name || !email || !message) {
       setContactMsg({ type: 'error', text: 'Please fill in all required fields.' })
       return
     }
+
+    if (formspreeId) {
+      setSubmitting(true)
+      setContactMsg(null)
+      try {
+        const res = await fetch(FORMSPREE_URL(formspreeId), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, message }),
+        })
+        if (res.ok) {
+          setContactMsg({
+            type: 'success',
+            text: 'Thank you! Your message has been sent. We will get back to you soon.',
+          })
+          form.reset()
+        } else {
+          setContactMsg({ type: 'error', text: 'Could not send message. Please try again or contact us on WhatsApp.' })
+        }
+      } catch (_) {
+        setContactMsg({ type: 'error', text: 'Could not send message. Please try again or contact us on WhatsApp.' })
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
     setContactMsg({
       type: 'success',
       text: 'Thank you! We will get back to you soon. You can also reach us on WhatsApp for faster response.',
@@ -89,9 +121,10 @@ export default function Contact() {
               )}
               <button
                 type="submit"
-                className="w-full bg-accent text-primary font-semibold py-3.5 rounded-card hover:bg-[#e8914a] transition-colors"
+                disabled={submitting}
+                className="w-full bg-accent text-primary font-semibold py-3.5 rounded-card hover:bg-[#e8914a] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Send Message
+                {submitting ? 'Sending...' : 'Send Message'}
               </button>
             </form>
           </div>

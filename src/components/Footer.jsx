@@ -1,8 +1,12 @@
+/**
+ * Footer: quick links, contact, newsletter. Links go to home + section when not on home.
+ */
 import { useState } from 'react'
-import { CITY_NAME, PHONE, EMAIL, ADDRESS_SHORT, whatsappUrl } from '../constants'
+import { useLocation } from 'react-router-dom'
+import { CITY_NAME, PHONE, EMAIL, ADDRESS_SHORT, whatsappUrl, CONTAINER_CLASS } from '../constants'
 import { scrollToSection } from '../utils/scroll'
 
-const quickLinks = [
+const QUICK_LINKS = [
   { href: '#packages', label: 'India Tour Packages' },
   { href: '#packages', label: 'Honeymoon Packages' },
   { href: '#packages', label: 'Family Packages' },
@@ -12,6 +16,9 @@ const quickLinks = [
 
 export default function Footer() {
   const [newsletterMsg, setNewsletterMsg] = useState(null)
+  const location = useLocation()
+  const isHome = location.pathname === '/'
+  const linkHref = (hash) => (isHome ? hash : `/${hash}`)
 
   const handleNewsletter = (e) => {
     e.preventDefault()
@@ -26,7 +33,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-primary text-white pt-16 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={CONTAINER_CLASS}>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div>
             <span className="font-heading font-bold text-xl">TravelIndia</span>
@@ -38,11 +45,11 @@ export default function Footer() {
           <div>
             <h3 className="font-heading font-semibold text-lg mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              {quickLinks.map(({ href, label }) => (
+              {QUICK_LINKS.map(({ href, label }) => (
                 <li key={`${href}-${label}`}>
                   <a
-                    href={href}
-                    onClick={(e) => scrollToSection(e, href)}
+                    href={linkHref(href)}
+                    onClick={(e) => { if (isHome) scrollToSection(e, href) }}
                     className="text-white/80 hover:text-accent transition-colors"
                   >
                     {label}

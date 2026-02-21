@@ -1,3 +1,6 @@
+/**
+ * Smooth-scroll to a section by id (e.g. #packages). Use with nav/footer links.
+ */
 export function scrollToSection(e, href) {
   e.preventDefault()
   if (!href || href === '#') return

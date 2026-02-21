@@ -1,15 +1,23 @@
-import { useState, useEffect } from 'react'
+/**
+ * Tour detail page: hero slider, history, benefits, inclusions, tour highlights gallery.
+ * Route: /tour/:slug
+ */
 import { useParams, Link } from 'react-router-dom'
 import { whatsappUrl } from '../constants'
 import { getTourBySlug } from '../data/tours'
+import { useImageSlider } from '../hooks/useImageSlider'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import WhatsAppFloat from '../components/WhatsAppFloat'
+import SliderDots from '../components/SliderDots'
+
+const HERO_SLIDER_INTERVAL_MS = 3000
 
 export default function TourDetailPage() {
   const { slug } = useParams()
   const tour = getTourBySlug(slug)
-  const [heroIndex, setHeroIndex] = useState(0)
+  const heroImages = tour?.detail?.images?.length > 1 ? tour.detail.images : null
+  const [heroIndex, setHeroIndex] = useImageSlider(heroImages?.length ?? 0, HERO_SLIDER_INTERVAL_MS)
 
   if (!tour) {
     return (
@@ -29,16 +37,7 @@ export default function TourDetailPage() {
   }
 
   const { title, dayLabel, history, benefits, inclusions, waText, image, images } = tour
-  const heroImages = images && images.length > 1 ? images : null
   const heroImage = !heroImages && (image || (images && images[0]?.src))
-
-  useEffect(() => {
-    if (!heroImages || heroImages.length < 2) return
-    const id = setInterval(() => {
-      setHeroIndex((i) => (i + 1) % heroImages.length)
-    }, 2000)
-    return () => clearInterval(id)
-  }, [heroImages])
 
   return (
     <div className="font-body text-text antialiased bg-bg">
@@ -81,18 +80,14 @@ export default function TourDetailPage() {
                   {title}
                 </h1>
               </div>
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-[2]">
-                {heroImages.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setHeroIndex(i)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                      i === heroIndex ? 'bg-accent scale-125' : 'bg-white/60 hover:bg-white/80'
-                    }`}
-                    aria-label={`Slide ${i + 1}`}
-                  />
-                ))}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[2]">
+                <SliderDots
+                  count={heroImages.length}
+                  activeIndex={heroIndex}
+                  onSelect={setHeroIndex}
+                  activeClass="bg-accent scale-125"
+                  inactiveClass="bg-white/60 hover:bg-white/80"
+                />
               </div>
             </header>
           )}

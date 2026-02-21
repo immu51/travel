@@ -1,26 +1,26 @@
-import { useState, useEffect } from 'react'
+/**
+ * Hero: full-screen top banner with image slider, headline, and CTA buttons.
+ */
 import { scrollToSection } from '../utils/scroll'
+import { useImageSlider } from '../hooks/useImageSlider'
+import SliderDots from './SliderDots'
+import hawaMahalImg from '../assets/gallery/hawa-mahal.png'
 
-const heroImages = [
+const HERO_IMAGES = [
   { url: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1920&q=85', alt: 'Taj Mahal - Agra' },
   { url: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=1920&q=85', alt: 'Lal Quila - Red Fort Delhi' },
-  { url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1920&q=85', alt: 'Ladakh monastery - North India monument' },
+  { url: hawaMahalImg, alt: 'Hawa Mahal - Jaipur' },
 ]
 
-export default function Hero() {
-  const [activeIndex, setActiveIndex] = useState(0)
+const SLIDER_INTERVAL_MS = 3000
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      setActiveIndex((i) => (i + 1) % heroImages.length)
-    }, 3000)
-    return () => clearInterval(id)
-  }, [])
+export default function Hero() {
+  const [activeIndex, setActiveIndex] = useImageSlider(HERO_IMAGES.length, SLIDER_INTERVAL_MS)
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="hero-bg-slider absolute inset-0">
-        {heroImages.map((img, i) => (
+        {HERO_IMAGES.map((img, i) => (
           <div
             key={img.alt}
             className={`hero-bg-slide absolute inset-0 transition-opacity duration-1000 ${
@@ -63,18 +63,12 @@ export default function Hero() {
           </a>
         </div>
       </div>
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-        {heroImages.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setActiveIndex(i)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-              i === activeIndex ? 'bg-accent scale-125' : 'bg-white/60 hover:bg-white/80'
-            }`}
-            aria-label={`Slide ${i + 1}`}
-          />
-        ))}
+      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10">
+        <SliderDots
+          count={HERO_IMAGES.length}
+          activeIndex={activeIndex}
+          onSelect={setActiveIndex}
+        />
       </div>
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
         <a

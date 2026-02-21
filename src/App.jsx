@@ -1,3 +1,6 @@
+/**
+ * App: root layout and routes. Home (/) and Tour detail (/tour/:slug).
+ */
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'

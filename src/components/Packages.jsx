@@ -1,23 +1,24 @@
-import { useState, useEffect, useRef } from 'react'
+/**
+ * Packages: list of tour package cards. Cards with multiple images show an auto-slider + swipe/dots.
+ */
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { whatsappUrl } from '../constants'
 import AnimateIn from './AnimateIn'
+import SliderDots from './SliderDots'
+import { useImageSlider } from '../hooks/useImageSlider'
+import { CONTAINER_CLASS, SECTION_PADDING } from '../constants'
 import { packages } from '../data/tours'
 
 const SWIPE_THRESHOLD = 50
+const CARD_SLIDER_INTERVAL_MS = 3000
 
 function CardImage({ pkg }) {
   const images = pkg.detail?.images
   const hasSlider = images && images.length > 1
-  const [index, setIndex] = useState(0)
+  const [index, setIndex] = useImageSlider(images?.length ?? 0, CARD_SLIDER_INTERVAL_MS)
   const startX = useRef(0)
   const didDrag = useRef(false)
-
-  useEffect(() => {
-    if (!hasSlider) return
-    const id = setInterval(() => setIndex((i) => (i + 1) % images.length), 3000)
-    return () => clearInterval(id)
-  }, [hasSlider, images?.length])
 
   const goNext = () => setIndex((i) => (i + 1) % images.length)
   const goPrev = () => setIndex((i) => (i - 1 + images.length) % images.length)
@@ -81,23 +82,16 @@ function CardImage({ pkg }) {
           />
         ))}
         <div
-          className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10"
+          className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10"
           onClick={(e) => e.stopPropagation()}
-          role="tablist"
-          aria-label="Slide indicators"
         >
-          {images.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setIndex(i) }}
-              className={`w-2 h-2 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accent ${
-                i === index ? 'bg-accent scale-125' : 'bg-white/70 hover:bg-white/90'
-              }`}
-              aria-label={`Slide ${i + 1}`}
-              aria-selected={i === index}
-            />
-          ))}
+          <SliderDots
+            count={images.length}
+            activeIndex={index}
+            onSelect={(i) => setIndex(i)}
+            activeClass="bg-accent scale-125"
+            inactiveClass="bg-white/70 hover:bg-white/90"
+          />
         </div>
       </div>
     )
@@ -117,8 +111,8 @@ function CardImage({ pkg }) {
 
 export default function Packages() {
   return (
-    <section id="packages" className="py-20 md:py-28 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="packages" className={`${SECTION_PADDING} bg-white`}>
+      <div className={CONTAINER_CLASS}>
         <AnimateIn variant="fadeUp" className="text-center mb-4">
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">
             Popular India Tour Packages

@@ -1,6 +1,9 @@
+/**
+ * AnimateIn: reveals children when they scroll into view. Use for section headings, cards, etc.
+ */
 import { useInView } from '../hooks/useInView'
 
-const variants = {
+const VARIANTS = {
   fadeUp: 'animate-fade-up',
   fadeIn: 'animate-fade-in-scroll',
   fadeUpScale: 'animate-fade-up-scale',
@@ -18,7 +21,7 @@ export default function AnimateIn({ children, variant = 'fadeUp', delay = 0, cla
     <Tag
       ref={ref}
       style={style}
-      className={`${base} ${variants[variant] || variants.fadeUp} ${inView ? inViewClass : ''} ${className}`.trim()}
+      className={`${base} ${VARIANTS[variant] || VARIANTS.fadeUp} ${inView ? inViewClass : ''} ${className}`.trim()}
     >
       {children}
     </Tag>
