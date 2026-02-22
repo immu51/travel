@@ -13,11 +13,16 @@ async function sha256(message) {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+/**
+ * Returns: { ok: true } on success, { ok: false, reason: 'invalid' } on wrong password,
+ * { ok: false, reason: 'not_configured' } when VITE_ADMIN_PASSWORD_HASH is not set (e.g. on Vercel).
+ */
 export async function verifyAdminPassword(password) {
   const storedHash = (import.meta.env.VITE_ADMIN_PASSWORD_HASH || '').trim().toLowerCase()
-  if (!storedHash) return false
+  if (!storedHash) return { ok: false, reason: 'not_configured' }
   const inputHash = await sha256(String(password).trim())
-  return inputHash === storedHash.toLowerCase()
+  if (inputHash !== storedHash) return { ok: false, reason: 'invalid' }
+  return { ok: true }
 }
 
 export function setAdminToken() {

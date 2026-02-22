@@ -25,12 +25,16 @@ export default function AdminLoginPage() {
     }
     setLoading(true)
     try {
-      const ok = await verifyAdminPassword(password)
-      if (ok && setAdminToken()) {
+      const result = await verifyAdminPassword(password)
+      if (result.ok && setAdminToken()) {
         navigate('/admin', { replace: true })
         return
       }
-      setError('Invalid password. Access denied.')
+      if (result.reason === 'not_configured') {
+        setError('Admin login not configured on this deployment. Add VITE_ADMIN_PASSWORD_HASH in Vercel → Project Settings → Environment Variables, then redeploy.')
+      } else {
+        setError('Invalid password. Access denied.')
+      }
     } catch (_) {
       setError('Something went wrong. Try again.')
     } finally {
