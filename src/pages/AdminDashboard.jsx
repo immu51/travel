@@ -3,7 +3,7 @@
  * Add/remove images (URL or upload from device), change descriptions. Saves to localStorage.
  */
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useContent } from '../context/ContentContext'
 import { removeAdminToken } from '../lib/adminAuth'
 import { readFileAsDataUrl, readFilesAsDataUrls } from '../lib/imageUpload'
@@ -475,11 +475,12 @@ function SocialLinksEditor() {
 }
 
 export default function AdminDashboard() {
+  const navigate = useNavigate()
   const { tours, sameDayTours } = useContent()
 
   const handleLogout = () => {
     removeAdminToken()
-    window.location.href = '/admin/login'
+    navigate('/admin/login', { replace: true })
   }
 
   return (
