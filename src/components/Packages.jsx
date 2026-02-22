@@ -1,14 +1,13 @@
 /**
- * Packages: list of tour package cards. Cards with multiple images show an auto-slider + swipe/dots.
+ * Packages: list of tour package cards on home. Links to /tours for full listing with filters.
  */
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { whatsappUrl } from '../constants'
+import { useContent } from '../context/ContentContext'
 import AnimateIn from './AnimateIn'
 import SliderDots from './SliderDots'
 import { useImageSlider } from '../hooks/useImageSlider'
 import { CONTAINER_CLASS, SECTION_PADDING } from '../constants'
-import { packages } from '../data/tours'
 
 const SWIPE_THRESHOLD = 50
 const CARD_SLIDER_INTERVAL_MS = 3000
@@ -73,7 +72,7 @@ function CardImage({ pkg }) {
         {images.map((img, i) => (
           <img
             key={i}
-            src={img.src}
+            src={typeof img.src === 'string' ? img.src : (img.src?.default ?? '')}
             alt={img.alt || pkg.alt}
             loading={i === 0 ? 'lazy' : undefined}
             className={`${imgClass} transition-opacity duration-1000 ${i === index ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none z-0'}`}
@@ -110,6 +109,7 @@ function CardImage({ pkg }) {
 }
 
 export default function Packages() {
+  const { tours: packages, getWhatsAppUrl, announcement } = useContent()
   return (
     <section id="packages" className={`${SECTION_PADDING} bg-white`}>
       <div className={CONTAINER_CLASS}>
@@ -125,9 +125,16 @@ export default function Packages() {
           </p>
         </AnimateIn>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {packages.map((pkg, i) => (
+          {packages.map((pkg, i) => {
+            const showOfferBadge = announcement?.enabled && announcement?.text?.trim() && announcement?.tourSlug === pkg.slug
+            return (
             <AnimateIn key={pkg.slug} variant="fadeUpScale" delay={120 + i * 70}>
-              <article className="package-card package-card-premium rounded-card overflow-hidden bg-bg shadow-soft">
+              <article className="package-card package-card-premium rounded-card overflow-hidden bg-bg shadow-soft relative">
+                {showOfferBadge && (
+                  <div className="absolute top-3 right-3 z-10 bg-accent text-primary font-heading font-bold text-sm px-3 py-1 rounded-lg shadow-md">
+                    {announcement.text.trim()}
+                  </div>
+                )}
                 {pkg.slug ? (
                   <Link to={`/tour/${pkg.slug}`} className="block">
                     <CardImage pkg={pkg} />
@@ -149,7 +156,7 @@ export default function Packages() {
                       </Link>
                     )}
                     <a
-                      href={whatsappUrl(pkg.waText)}
+                      href={getWhatsAppUrl(pkg.waText)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-enquire inline-flex items-center gap-2 font-semibold px-5 py-2.5 rounded-card"
@@ -160,7 +167,19 @@ export default function Packages() {
                 </div>
               </article>
             </AnimateIn>
-          ))}
+          )
+          })}
+        </div>
+        <div className="text-center mt-10">
+          <Link
+            to="/tours"
+            className="inline-flex items-center gap-2 font-semibold text-accent hover:text-[#e8914a] transition-colors"
+          >
+            View all packages & filters
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
         </div>
       </div>
     </section>

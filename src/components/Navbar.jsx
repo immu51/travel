@@ -1,23 +1,30 @@
 /**
- * Navbar: fixed top bar, home/tour links, WhatsApp. On tour page, links go to home + section.
+ * Navbar: Logo, Home, Our Services (dropdown), About, Gallery, Contact. Hash links on home; route links elsewhere.
  */
-import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
-import { whatsappUrl } from '../constants'
+import { useState, useEffect, useRef } from 'react'
+import { useLocation, Link } from 'react-router-dom'
 import { scrollToSection } from '../utils/scroll'
+import Logo from './Logo'
 
-const navLinks = [
-  { href: '#home', label: 'Home' },
-  { href: '#packages', label: 'India Tour Packages' },
-  { href: '#about', label: 'About' },
-  { href: '#gallery', label: 'Gallery' },
-  { href: '#contact', label: 'Contact' },
+const servicesDropdown = [
+  { href: '/car-rental', label: 'Car Rental' },
+  { href: '/tours', label: 'Tour Package Reservation' },
+  { href: '/hotel-booking', label: 'Hotel Reservation' },
+  { href: '/booking', state: { service: 'guide' }, label: 'Tour Guide Reservation' },
+]
+
+const navLinksAfterServices = [
+  { href: '#about', label: 'About', hash: true },
+  { href: '#gallery', label: 'Gallery', hash: true },
+  { href: '#contact', label: 'Contact', hash: true },
 ]
 
 export default function Navbar() {
   const [solid, setSolid] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [logoError, setLogoError] = useState(false)
+  const [servicesOpen, setServicesOpen] = useState(false)
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
+  const dropdownRef = useRef(null)
   const location = useLocation()
   const isHome = location.pathname === '/'
 
@@ -28,11 +35,33 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const linkHref = (hash) => (isHome ? hash : `/${hash}`)
-  const handleNavClick = (e, href) => {
-    if (isHome) scrollToSection(e, href)
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setServicesOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const linkHref = (link) => {
+    if (!link.hash) return link.href
+    return isHome ? link.href : (link.href.startsWith('#') ? `/${link.href}` : link.href)
+  }
+  const handleNavClick = (e, link) => {
+    if (link.hash && isHome) {
+      e.preventDefault()
+      scrollToSection(e, link.href)
+    }
   }
   const useSolid = solid || !isHome
+
+  const goHome = (e) => {
+    setMobileOpen(false)
+    if (isHome) {
+      e.preventDefault()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
 
   return (
     <header
@@ -40,99 +69,201 @@ export default function Navbar() {
         useSolid ? 'navbar-solid' : 'navbar-over-hero'
       }`}
     >
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          <a
-            href={linkHref('#home')}
-            onClick={(e) => handleNavClick(e, '#home')}
-            className="flex items-center gap-2"
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-w-0 overflow-x-hidden md:overflow-visible">
+        <div className="flex items-center justify-between h-16 md:h-20 gap-2 min-w-0">
+          <Link
+            to="/"
+            className="flex items-center gap-2 min-w-0 shrink"
+            aria-label="TraverraX Home"
+            onClick={goHome}
           >
-            {!logoError && (
-              <img
-                src="/logo.png"
-                alt=""
-                className="h-8 md:h-9 w-auto object-contain"
-                onError={() => setLogoError(true)}
-              />
-            )}
-            <span className={`font-heading font-bold text-xl transition-colors ${useSolid ? 'text-primary' : 'text-white'}`}>
-              Tour & Travel
-            </span>
-          </a>
+            <Logo
+              className={`transition-colors ${useSolid ? 'text-primary' : 'text-white'}`}
+              size="sm"
+              showText={true}
+              layout="inline"
+            />
+          </Link>
           <ul className="hidden md:flex items-center gap-8">
-            {navLinks.map(({ href, label }) => (
-              <li key={href}>
-                <a
-                  href={linkHref(href)}
-                  onClick={(e) => handleNavClick(e, href)}
-                  className={`font-medium transition-colors ${useSolid ? 'text-primary hover:text-accent' : 'text-white hover:text-white/90'}`}
-                >
-                  {label}
-                </a>
+            <li>
+              <Link
+                to="/"
+                onClick={goHome}
+                className={`font-medium transition-colors ${useSolid ? 'text-primary hover:text-accent' : 'text-white hover:text-white/90'}`}
+              >
+                Home
+              </Link>
+            </li>
+            {/* Our Services dropdown - opens on hover, no gap so it doesn't close when moving to menu */}
+            <li
+              className="relative"
+              ref={dropdownRef}
+              onMouseEnter={() => setServicesOpen(true)}
+              onMouseLeave={() => setServicesOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setServicesOpen((o) => !o)}
+                className={`flex items-center gap-1 font-medium transition-colors uppercase tracking-wide ${
+                  useSolid ? 'text-primary hover:text-accent' : 'text-white hover:text-white/90'
+                } ${servicesOpen ? 'underline' : ''}`}
+                aria-expanded={servicesOpen}
+                aria-haspopup="true"
+              >
+                Our Services
+                <ChevronIcon className={`w-4 h-4 transition-transform ${servicesOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {servicesOpen && (
+                <div className="absolute left-0 top-full pt-1 min-w-[220px] z-[100]">
+                  <ul className="rounded-xl bg-white shadow-lg border border-primary/10 py-2 overflow-hidden">
+                    {servicesDropdown.map((item) => (
+                      <li key={item.label}>
+                        <Link
+                          to={item.href}
+                          state={item.state}
+                          onClick={() => setServicesOpen(false)}
+                          className="block px-5 py-3 font-medium text-primary hover:bg-primary/5 uppercase tracking-wide text-sm whitespace-nowrap"
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </li>
+            {navLinksAfterServices.map((link) => (
+              <li key={link.href + link.label}>
+                {link.hash ? (
+                  <a
+                    href={isHome ? link.href : `/${link.href}`}
+                    onClick={(e) => handleNavClick(e, link)}
+                    className={`font-medium transition-colors ${useSolid ? 'text-primary hover:text-accent' : 'text-white hover:text-white/90'}`}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    to={link.href}
+                    className={`font-medium transition-colors ${useSolid ? 'text-primary hover:text-accent' : 'text-white hover:text-white/90'}`}
+                  >
+                    {link.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
-          <a
-            href={whatsappUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/admin/login"
             className="hidden md:inline-flex items-center gap-2 bg-accent text-primary font-semibold px-5 py-2.5 rounded-card hover:bg-[#e8914a] transition-all shadow-soft hover:shadow-glass hover:-translate-y-0.5"
           >
-            <WhatsAppIcon className="w-5 h-5" />
-            WhatsApp
-          </a>
+            Login
+          </Link>
           <button
             type="button"
             className={`md:hidden p-2 transition-colors ${useSolid ? 'text-primary' : 'text-white'}`}
-            aria-label="Open menu"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen((o) => !o)}
           >
-            <MenuIcon className="w-6 h-6" />
+            <span className="relative w-6 h-6 block">
+              <span className={`absolute inset-0 flex flex-col justify-center gap-1.5 transition-all duration-300 ease-out ${mobileOpen ? 'gap-0' : ''}`} aria-hidden>
+                <span className={`h-0.5 w-6 bg-current rounded-full transition-all duration-300 ease-out origin-center ${mobileOpen ? 'rotate-45 translate-y-[0.2rem]' : ''}`} />
+                <span className={`h-0.5 w-6 bg-current rounded-full transition-all duration-300 ease-out ${mobileOpen ? 'opacity-0 scale-x-0' : ''}`} />
+                <span className={`h-0.5 w-6 bg-current rounded-full transition-all duration-300 ease-out origin-center ${mobileOpen ? '-rotate-45 -translate-y-[0.2rem]' : ''}`} />
+              </span>
+            </span>
           </button>
         </div>
       </nav>
-      <div className={`md:hidden bg-white border-t border-gray-100 shadow-lg ${mobileOpen ? '' : 'hidden'}`}>
+      <div
+        className={`nav-mobile-menu md:hidden bg-white border-t border-gray-100 shadow-lg overflow-y-auto overflow-x-hidden transition-all duration-300 ease-out ${
+          mobileOpen
+            ? 'max-h-[calc(100vh-4rem)] opacity-100 translate-y-0'
+            : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none'
+        }`}
+      >
         <div className="px-4 py-4 space-y-2">
-          {navLinks.map(({ href, label }) => (
-            <a
-              key={href}
-              href={linkHref(href)}
-              onClick={(e) => {
-                handleNavClick(e, href)
-                setMobileOpen(false)
-              }}
-              className="block py-2 text-primary font-medium"
+          <Link
+            to="/"
+            onClick={() => {
+              setMobileOpen(false)
+              if (location.pathname === '/') window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            className="block py-2 text-primary font-medium"
+          >
+            Home
+          </Link>
+          <div>
+            <button
+              type="button"
+              onClick={() => setMobileServicesOpen((o) => !o)}
+              className="flex items-center gap-2 py-2 text-primary font-medium uppercase tracking-wide"
             >
-              {label}
-            </a>
-          ))}
-          <a
-            href={whatsappUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
+              Our Services
+              <ChevronIcon className={`w-4 h-4 transition-transform ${mobileServicesOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {mobileServicesOpen && (
+              <ul className="pl-4 mt-1 space-y-1 border-l-2 border-primary/20">
+                {servicesDropdown.map((item) => (
+                  <li key={item.label}>
+                    <Link
+                      to={item.href}
+                      state={item.state}
+                      onClick={() => {
+                        setMobileOpen(false)
+                        setMobileServicesOpen(false)
+                      }}
+                      className="block py-2 text-primary/90 font-medium text-sm uppercase"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {navLinksAfterServices.map((link) =>
+            link.hash ? (
+              <a
+                key={link.href}
+                href={isHome ? link.href : `/${link.href}`}
+                onClick={(e) => {
+                  handleNavClick(e, link)
+                  setMobileOpen(false)
+                }}
+                className="block py-2 text-primary font-medium"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.href}
+                to={link.href}
+                onClick={() => setMobileOpen(false)}
+                className="block py-2 text-primary font-medium"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
+          <Link
+            to="/admin/login"
+            onClick={() => setMobileOpen(false)}
             className="inline-flex items-center gap-2 bg-accent text-primary font-semibold px-4 py-2 rounded-card mt-2"
           >
-            WhatsApp
-          </a>
+            Login
+          </Link>
         </div>
       </div>
     </header>
   )
 }
 
-function WhatsAppIcon({ className }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-    </svg>
-  )
-}
-
-function MenuIcon({ className }) {
+function ChevronIcon({ className }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
   )
 }

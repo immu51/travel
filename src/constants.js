@@ -2,13 +2,13 @@
  * App-wide config. Replace with your details before going live.
  */
 export const WHATSAPP_NUMBER = '918279946669'
-export const CITY_NAME = 'Mumbai'
+export const CITY_NAME = 'Agra'
 export const PHONE = '+91 82799 46669'
-export const EMAIL = 'info@travelindia.com'
+export const EMAIL = 'khanjaved11974@gmail.com'
 /** Email where Contact form submissions are sent (use this in Formspree when creating the form). */
 export const CONTACT_FORM_RECIPIENT_EMAIL = 'khanjaved11974@gmail.com'
-export const ADDRESS = '123 Travel Street, Andheri West, Mumbai, Maharashtra 400058'
-export const ADDRESS_SHORT = '123 Travel Street, Mumbai'
+export const ADDRESS = 'Taj Ganj ,Agra , Uttar Pradesh'
+export const ADDRESS_SHORT = 'Taj Ganj ,Agra , Uttar Pradesh'
 
 /** Build WhatsApp chat URL; pass optional pre-filled message. */
 export const whatsappUrl = (text = '') =>

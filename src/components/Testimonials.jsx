@@ -1,8 +1,9 @@
 /**
  * Reviews block: show all reviews with star rating; form to add new review.
+ * On mobile: slider (one card at a time). On md+: grid.
  * Uses Firebase Firestore when configured (real-time); else localStorage.
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AnimateIn from './AnimateIn'
 import { CONTAINER_CLASS } from '../constants'
 import { subscribeReviews, addReview, isFirebaseEnabled } from '../lib/reviews'
@@ -15,21 +16,21 @@ const defaultReviews = [
     name: 'Priya S., Mumbai',
     stars: 5,
     quote: 'We booked a customized holiday package for our family. The team was professional, and every detail was taken care of. Highly recommend this travel agency in Mumbai!',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&q=80',
+    image: '/images/testimonials/1.jpg',
   },
   {
     id: '2',
     name: 'Rahul & Anjali, Delhi',
     stars: 5,
     quote: 'Our honeymoon tour package to Kerala was beyond perfect. The best tour and travel agency in India—trusted travel experts who understood exactly what we wanted.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&q=80',
+    image: '/images/testimonials/2.jpg',
   },
   {
     id: '3',
     name: 'Meera K., Bangalore',
     stars: 4,
     quote: 'Adventure trips in India done right! Affordable travel agency with great customized options. Ladakh trip was seamless. Will book again.',
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&q=80',
+    image: '/images/testimonials/3.jpg',
   },
 ]
 
@@ -69,6 +70,33 @@ function StarInput({ value, onChange }) {
   )
 }
 
+function ReviewCard({ r }) {
+  return (
+    <article className="h-full p-6 rounded-2xl bg-white shadow-soft border border-primary/5 flex flex-col">
+      <div className="flex items-center gap-4 mb-3">
+        {r.image ? (
+          <img
+            src={r.image}
+            alt=""
+            className="w-12 h-12 rounded-full object-cover border-2 border-accent/30 flex-shrink-0"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-heading font-semibold text-lg">
+            {r.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div>
+          <StarDisplay rating={r.stars} />
+          <cite className="font-heading font-semibold text-primary not-italic block mt-1">
+            {r.name}
+          </cite>
+        </div>
+      </div>
+      <blockquote className="text-text/90 leading-relaxed flex-1">"{r.quote}"</blockquote>
+    </article>
+  )
+}
+
 function getReviews() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -86,13 +114,36 @@ function saveReviews(reviews) {
   } catch (_) {}
 }
 
+const SLIDER_AUTOPLAY_MS = 5000
+
 export default function Testimonials() {
   const [reviews, setReviews] = useState([])
   const [form, setForm] = useState({ name: '', stars: 5, quote: '' })
   const [message, setMessage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [sliderIndex, setSliderIndex] = useState(0)
+  const sliderRef = useRef(null)
+  const touchStartX = useRef(0)
   const useFirebase = isFirebaseEnabled()
+
+  useEffect(() => {
+    if (reviews.length <= 1) return
+    const t = setInterval(() => {
+      setSliderIndex((i) => (i + 1) % reviews.length)
+    }, SLIDER_AUTOPLAY_MS)
+    return () => clearInterval(t)
+  }, [reviews.length])
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const handleTouchEnd = (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (reviews.length <= 1) return
+    if (dx < -40) setSliderIndex((i) => (i + 1) % reviews.length)
+    else if (dx > 40) setSliderIndex((i) => (i - 1 + reviews.length) % reviews.length)
+  }
 
   useEffect(() => {
     if (useFirebase) {
@@ -218,40 +269,81 @@ export default function Testimonials() {
           </div>
         </AnimateIn>
 
-        {/* All reviews – grid, each with stars */}
+        {/* All reviews – slider on mobile, grid on md+ */}
         {loading ? (
           <p className="text-center text-text/70 py-12">Loading reviews...</p>
         ) : reviews.length === 0 ? (
           <p className="text-center text-text/70 py-12">No reviews yet. Be the first to share your experience!</p>
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reviews.map((r, i) => (
-            <AnimateIn key={r.id} variant="fadeUpScale" delay={120 + i * 50}>
-              <article className="h-full p-6 rounded-2xl bg-white shadow-soft border border-primary/5 flex flex-col">
-                <div className="flex items-center gap-4 mb-3">
-                  {r.image ? (
-                    <img
-                      src={r.image}
-                      alt=""
-                      className="w-12 h-12 rounded-full object-cover border-2 border-accent/30 flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-heading font-semibold text-lg">
-                      {r.name.charAt(0).toUpperCase()}
+          <>
+            {/* Mobile: one card slider with dots and arrows */}
+            <div className="md:hidden">
+              <div
+                ref={sliderRef}
+                className="overflow-hidden select-none"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                style={{ touchAction: 'pan-y' }}
+              >
+                <div
+                  className="flex transition-transform duration-300 ease-out"
+                  style={{ transform: `translateX(-${sliderIndex * 100}%)` }}
+                >
+                  {reviews.map((r) => (
+                    <div key={r.id} className="w-full flex-shrink-0 px-1">
+                      <ReviewCard r={r} />
                     </div>
-                  )}
-                  <div>
-                    <StarDisplay rating={r.stars} />
-                    <cite className="font-heading font-semibold text-primary not-italic block mt-1">
-                      {r.name}
-                    </cite>
-                  </div>
+                  ))}
                 </div>
-                <blockquote className="text-text/90 leading-relaxed flex-1">"{r.quote}"</blockquote>
-              </article>
-            </AnimateIn>
-          ))}
-        </div>
+              </div>
+              {reviews.length > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setSliderIndex((i) => (i - 1 + reviews.length) % reviews.length)}
+                    className="p-2 rounded-full bg-white shadow-soft border border-primary/10 text-primary hover:bg-primary/5 transition-colors"
+                    aria-label="Previous review"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <div className="flex gap-2">
+                    {reviews.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setSliderIndex(i)}
+                        className={`w-2.5 h-2.5 rounded-full transition-all ${
+                          i === sliderIndex ? 'bg-accent scale-110' : 'bg-primary/25 hover:bg-primary/40'
+                        }`}
+                        aria-label={`Go to review ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSliderIndex((i) => (i + 1) % reviews.length)}
+                    className="p-2 rounded-full bg-white shadow-soft border border-primary/10 text-primary hover:bg-primary/5 transition-colors"
+                    aria-label="Next review"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop: grid */}
+            <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+              {reviews.map((r, i) => (
+                <AnimateIn key={r.id} variant="fadeUpScale" delay={120 + i * 50}>
+                  <ReviewCard r={r} />
+                </AnimateIn>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </section>

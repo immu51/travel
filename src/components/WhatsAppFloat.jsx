@@ -1,12 +1,13 @@
-import { whatsappUrl } from '../constants'
+import { useContent } from '../context/ContentContext'
 
 export default function WhatsAppFloat() {
+  const { getWhatsAppUrl } = useContent()
   return (
     <a
-      href={whatsappUrl()}
+      href={getWhatsAppUrl()}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-glass hover:scale-110 transition-transform"
+      className="fixed right-4 bottom-4 sm:right-6 sm:bottom-6 z-50 w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-glass hover:scale-110 transition-transform"
       aria-label="Chat on WhatsApp"
     >
       <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">

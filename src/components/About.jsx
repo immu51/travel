@@ -54,7 +54,7 @@ export default function About() {
           <div className="relative">
             <div className="aspect-[4/3] rounded-card overflow-hidden shadow-glass">
               <img
-                src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80"
+                src="/images/about/team.jpg"
                 alt="Travel agency team - trusted travel experts in India"
                 className="w-full h-full object-cover"
               />

@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { CITY_NAME, PHONE, EMAIL, ADDRESS } from '../constants'
+import { useContent } from '../context/ContentContext'
 import AnimateIn from './AnimateIn'
 
 const FORMSPREE_URL = (id) => `https://formspree.io/f/${id}`
 
 export default function Contact() {
+  const { businessInfo } = useContent()
+  const { cityName, phone, email, address } = businessInfo || {}
   const [contactMsg, setContactMsg] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const formspreeId = (import.meta.env.VITE_FORMSPREE_FORM_ID || '').trim()
@@ -67,7 +69,7 @@ export default function Contact() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <AnimateIn variant="fadeUp" className="text-center mb-4">
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">
-            Contact Our Travel Agency in {CITY_NAME}
+            Contact Our Travel Agency in {cityName || 'India'}
           </h2>
         </AnimateIn>
         <AnimateIn variant="fadeUp" delay={100} className="text-center mb-16">
@@ -149,7 +151,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="font-heading font-semibold text-primary mb-1">Address</h3>
-                  <p className="text-text/80">{ADDRESS}</p>
+                  <p className="text-text/80">{address || ''}</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -160,8 +162,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="font-heading font-semibold text-primary mb-1">Phone</h3>
-                  <a href={`tel:${PHONE.replace(/\s/g, '')}`} className="text-text/80 hover:text-accent transition-colors">
-                    {PHONE}
+                  <a href={`tel:${(phone || '').replace(/\s/g, '')}`} className="text-text/80 hover:text-accent transition-colors">
+                    {phone || ''}
                   </a>
                 </div>
               </div>
@@ -173,8 +175,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="font-heading font-semibold text-primary mb-1">Email</h3>
-                  <a href={`mailto:${EMAIL}`} className="text-text/80 hover:text-accent transition-colors">
-                    {EMAIL}
+                  <a href={`mailto:${email || ''}`} className="text-text/80 hover:text-accent transition-colors">
+                    {email || ''}
                   </a>
                 </div>
               </div>
@@ -188,7 +190,7 @@ export default function Contact() {
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title={`Travel Agency Location - ${CITY_NAME}`}
+                title={`Travel Agency Location - ${cityName || 'India'}`}
               />
             </div>
           </div>
