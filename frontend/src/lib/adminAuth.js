@@ -31,7 +31,7 @@ export async function verifyAdminPassword(password) {
   }
   const storedHash = (import.meta.env.VITE_ADMIN_PASSWORD_HASH || '').trim().toLowerCase()
   if (!storedHash) return { ok: false, reason: 'not_configured' }
-  const inputHash = await sha256(String(password).trim())
+  const inputHash = (await sha256(String(password).trim())).toLowerCase()
   if (inputHash !== storedHash) return { ok: false, reason: 'invalid' }
   setAdminToken()
   return { ok: true }

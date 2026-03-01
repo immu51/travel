@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useContent } from '../context/ContentContext'
 import AnimateIn from './AnimateIn'
-import { hasApi, submitContact } from '../lib/api'
 
 const FORMSPREE_URL = (id) => `https://formspree.io/f/${id}`
 
@@ -10,7 +9,7 @@ export default function Contact() {
   const { cityName, phone, email, address } = businessInfo || {}
   const [contactMsg, setContactMsg] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const formspreeId = (import.meta.env.VITE_FORMSPREE_FORM_ID || '').trim()
+  const formspreeId = (import.meta.env.VITE_FORMSPREE_FORM_ID || 'mdalwlnz').trim()
 
   const handleContactSubmit = async (e) => {
     e.preventDefault()
@@ -24,63 +23,40 @@ export default function Contact() {
       return
     }
 
+    if (!formspreeId) {
+      setContactMsg({
+        type: 'error',
+        text: 'Contact form not set up. Add VITE_FORMSPREE_FORM_ID in Vercel (or .env) and redeploy. Or contact us on WhatsApp.',
+      })
+      return
+    }
+
     const payload = { name, email: emailVal, phone: phoneVal || '(not provided)', message }
-
-    if (hasApi()) {
-      setSubmitting(true)
-      setContactMsg(null)
-      try {
-        const { ok } = await submitContact(payload)
-        if (ok) {
-          setContactMsg({
-            type: 'success',
-            text: 'Thank you! Your message has been sent. We will get back to you soon.',
-          })
-          form.reset()
-        } else {
-          setContactMsg({ type: 'error', text: 'Could not send message. Please try again or contact us on WhatsApp.' })
-        }
-      } catch (_) {
-        setContactMsg({ type: 'error', text: 'Could not send message. Please try again or contact us on WhatsApp.' })
-      } finally {
-        setSubmitting(false)
-      }
-      return
-    }
-
-    if (formspreeId) {
-      setSubmitting(true)
-      setContactMsg(null)
-      try {
-        const res = await fetch(FORMSPREE_URL(formspreeId), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ _subject: `Contact form: ${name}`, ...payload }),
+    setSubmitting(true)
+    setContactMsg(null)
+    try {
+      const res = await fetch(FORMSPREE_URL(formspreeId), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ _subject: `Contact form: ${name}`, ...payload }),
+      })
+      if (res.ok) {
+        setContactMsg({
+          type: 'success',
+          text: 'Thank you! Your message has been sent. We will get back to you soon.',
         })
-        if (res.ok) {
-          setContactMsg({
-            type: 'success',
-            text: 'Thank you! Your message has been sent. We will get back to you soon. (Check inbox and Spam for the email.)',
-          })
-          form.reset()
-        } else {
-          const errMsg = res.status === 422
-            ? 'Invalid form or Formspree limit reached. Check CONTACT-FORM-SETUP.md or try later.'
-            : 'Could not send message. Please try again or contact us on WhatsApp.'
-          setContactMsg({ type: 'error', text: errMsg })
-        }
-      } catch (_) {
-        setContactMsg({ type: 'error', text: 'Could not send message. Please try again or contact us on WhatsApp.' })
-      } finally {
-        setSubmitting(false)
+        form.reset()
+      } else {
+        const errMsg = res.status === 422
+          ? 'Form limit reached or invalid. Please try again later or contact us on WhatsApp.'
+          : 'Could not send message. Please try again or contact us on WhatsApp.'
+        setContactMsg({ type: 'error', text: errMsg })
       }
-      return
+    } catch (_) {
+      setContactMsg({ type: 'error', text: 'Could not send message. Please try again or contact us on WhatsApp.' })
+    } finally {
+      setSubmitting(false)
     }
-
-    setContactMsg({
-      type: 'error',
-      text: 'Form not set up. Add VITE_API_URL or VITE_FORMSPREE_FORM_ID in .env. Or contact us on WhatsApp.',
-    })
   }
 
   return (

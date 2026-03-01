@@ -18,7 +18,7 @@ router.post('/login', async (req, res) => {
     return res.json({ ok: false, reason: 'not_configured' })
   }
   const inputHash = sha256(password)
-  if (inputHash !== ADMIN_HASH) {
+  if (inputHash.toLowerCase() !== ADMIN_HASH) {
     return res.json({ ok: false, reason: 'invalid' })
   }
   const token = signToken({ sub: 'admin' })

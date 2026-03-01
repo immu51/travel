@@ -1,15 +1,17 @@
 /**
  * Admin login: password-only. SHA-256 compared with VITE_ADMIN_PASSWORD_HASH.
- * Close option to go back to site.
+ * Close option to go back to site. Forgot password = instructions to reset via env.
  */
 import { useState } from 'react'
 import { useNavigate, Navigate, Link } from 'react-router-dom'
 import { verifyAdminPassword, isAdminAuthenticated } from '../lib/adminAuth'
+import { hasApi } from '../lib/api'
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
   const navigate = useNavigate()
 
   if (isAdminAuthenticated()) {
@@ -31,9 +33,9 @@ export default function AdminLoginPage() {
         return
       }
       if (result.reason === 'not_configured') {
-        setError('Admin login not configured on this deployment. Add VITE_ADMIN_PASSWORD_HASH in Vercel → Project Settings → Environment Variables, then redeploy.')
+        setError('Admin login not configured. Set VITE_ADMIN_PASSWORD_HASH in Vercel → Project Settings → Environment Variables, then redeploy.')
       } else {
-        setError('Invalid password. Access denied.')
+        setError('Invalid password. Access denied. Use "Forgot password?" below if you need to reset.')
       }
     } catch (_) {
       setError('Something went wrong. Try again.')
@@ -87,6 +89,28 @@ export default function AdminLoginPage() {
             >
               {loading ? 'Checking...' : 'Login'}
             </button>
+            <p className="text-center mt-3">
+              <button
+                type="button"
+                onClick={() => setShowForgot(!showForgot)}
+                className="text-sm text-primary/60 hover:text-accent transition-colors"
+              >
+                Forgot password?
+              </button>
+            </p>
+            {showForgot && (
+              <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/10 text-sm text-primary/90 space-y-2">
+                <p className="font-medium">Reset admin password</p>
+                <p>There is no email recovery. To set a new password:</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>On your computer, run: <code className="bg-white px-1 rounded text-xs">cd frontend && node scripts/generate-admin-hash.js "YourNewPassword"</code></li>
+                  <li>Copy the value after <code className="bg-white px-1 rounded text-xs">VITE_ADMIN_PASSWORD_HASH=</code></li>
+                  <li>In Vercel: Project → Settings → Environment Variables. Set <code className="bg-white px-1 rounded text-xs">VITE_ADMIN_PASSWORD_HASH</code> to that value. Redeploy.</li>
+                  {hasApi() && <li>If you use a backend: set <code className="bg-white px-1 rounded text-xs">ADMIN_PASSWORD_HASH</code> to the same value in your backend env.</li>}
+                </ol>
+                <p>Then log in with <strong>YourNewPassword</strong>.</p>
+              </div>
+            )}
           </form>
           <p className="text-center mt-4">
             <Link to="/" className="text-sm text-primary/60 hover:text-accent transition-colors">
