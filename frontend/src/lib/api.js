@@ -45,6 +45,7 @@ export async function saveContent(overrides, token) {
 
 export async function loginWithApi(password) {
   if (!hasApi()) return null
+  // Sends plain password; backend hashes and compares. No client-side password hashing.
   try {
     const res = await fetch(apiUrl('/api/auth/login'), {
       method: 'POST',
@@ -56,6 +57,48 @@ export async function loginWithApi(password) {
     return { ok: false, reason: data.reason || 'invalid' }
   } catch (_) {
     return { ok: false, reason: 'invalid' }
+  }
+}
+
+export async function getRecoveryEmail() {
+  if (!hasApi()) return null
+  try {
+    const res = await fetch(apiUrl('/api/auth/recovery-email'))
+    const data = await res.json()
+    return data.ok ? { ok: true, email: data.email } : { ok: false }
+  } catch (_) {
+    return null
+  }
+}
+
+export async function forgotPasswordApi() {
+  if (!hasApi()) return { ok: false, reason: 'no_api' }
+  try {
+    const res = await fetch(apiUrl('/api/auth/forgot-password'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    const data = await res.json()
+    return { ok: data.ok === true, reason: data.reason }
+  } catch (_) {
+    return { ok: false, reason: 'network' }
+  }
+}
+
+export async function verifyOtpResetApi(otp, newPassword) {
+  if (!hasApi()) return { ok: false, reason: 'no_api' }
+  // Client only sends OTP + new password (plain). Backend hashes and stores; no client-side crypto.
+  try {
+    const res = await fetch(apiUrl('/api/auth/verify-otp-reset'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ otp: String(otp).trim(), newPassword: String(newPassword).trim() }),
+    })
+    const data = await res.json()
+    return { ok: data.ok === true, reason: data.reason }
+  } catch (_) {
+    return { ok: false, reason: 'network' }
   }
 }
 
