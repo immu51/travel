@@ -1,0 +1,13 @@
+{
+  "name": "travel",
+  "private": true,
+  "description": "Root package for Railway deploy – builds and runs backend.",
+  "scripts": {
+    "build": "cd backend && npm ci",
+    "start": "cd backend && node index.js",
+    "postinstall": "cd backend && npm install"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
