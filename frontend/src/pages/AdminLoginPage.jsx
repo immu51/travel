@@ -1,37 +1,39 @@
 /**
- * Admin login: password-only. Forgot password = OTP to recovery email, then set new password.
+ * Admin login: password-only. Forgot password = step-based (email → OTP → new password).
+ * Uses /api/admin/send-otp, verify-otp, reset-password when VITE_API_URL is set.
  */
 import { useState, useEffect } from 'react'
 import { useNavigate, Navigate, Link } from 'react-router-dom'
 import { verifyAdminPassword, isAdminAuthenticated } from '../lib/adminAuth'
-import { hasApi, getRecoveryEmail, forgotPasswordApi, verifyOtpResetApi } from '../lib/api'
+import { hasApi, adminSendOtp, adminVerifyOtp, adminResetPassword } from '../lib/api'
+
+const RESEND_COOLDOWN_SEC = 30
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showForgot, setShowForgot] = useState(false)
-  const [forgotStep, setForgotStep] = useState(1)
-  const [recoveryEmailMask, setRecoveryEmailMask] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
+  const [step, setStep] = useState(1)
+  const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [resetSuccess, setResetSuccess] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [resendSec, setResendSec] = useState(0)
   const navigate = useNavigate()
 
+  // Resend OTP cooldown timer
   useEffect(() => {
-    if (showForgot && hasApi()) {
-      getRecoveryEmail().then((r) => {
-        if (r?.ok && r.email) setRecoveryEmailMask(r.email)
-      })
-    }
-  }, [showForgot])
+    if (resendSec <= 0) return
+    const t = setInterval(() => setResendSec((s) => s - 1), 1000)
+    return () => clearInterval(t)
+  }, [resendSec])
 
   if (isAdminAuthenticated()) {
     return <Navigate to="/admin" replace />
   }
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
     if (!password.trim()) {
@@ -46,9 +48,9 @@ export default function AdminLoginPage() {
         return
       }
       if (result.reason === 'not_configured') {
-        setError('Admin login not configured. Set VITE_ADMIN_PASSWORD_HASH in Vercel (or backend ADMIN_RECOVERY_EMAIL + Gmail for forgot password).')
+        setError('Admin login not configured. Set VITE_API_URL and create admin (see backend scripts/createAdmin.js).')
       } else {
-        setError('Invalid password. Use "Forgot password?" to reset via email OTP.')
+        setError('Invalid password. Use "Forgot password?" to reset.')
       }
     } catch (_) {
       setError('Something went wrong. Try again.')
@@ -57,20 +59,22 @@ export default function AdminLoginPage() {
     }
   }
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = async (e) => {
+    e?.preventDefault()
     setError('')
+    const em = email.trim().toLowerCase()
+    if (!em) {
+      setError('Enter your admin email.')
+      return
+    }
     setLoading(true)
     try {
-      const result = await forgotPasswordApi()
+      const result = await adminSendOtp(em)
       if (result.ok) {
-        setOtpSent(true)
-        setForgotStep(2)
+        setStep(2)
+        setResendSec(RESEND_COOLDOWN_SEC)
       } else {
-        if (result.reason === 'not_configured') {
-          setError('Recovery email not set up. Add ADMIN_RECOVERY_EMAIL, GMAIL_USER and GMAIL_APP_PASSWORD in backend .env.')
-        } else {
-          setError('Could not send OTP. Try again or check backend email config.')
-        }
+        setError(result.message || 'Could not send OTP.')
       }
     } catch (_) {
       setError('Network error. Is the backend running?')
@@ -79,30 +83,53 @@ export default function AdminLoginPage() {
     }
   }
 
-  const handleVerifyOtpAndReset = async (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault()
     setError('')
-    if (!otp.trim() || !newPassword.trim()) {
-      setError('Enter OTP and new password.')
-      return
-    }
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters.')
+    if (!otp.trim()) {
+      setError('Enter the OTP.')
       return
     }
     setLoading(true)
     try {
-      const result = await verifyOtpResetApi(otp, newPassword)
+      const result = await adminVerifyOtp(email.trim().toLowerCase(), otp)
       if (result.ok) {
-        setResetSuccess(true)
+        setStep(3)
+      } else {
+        setError(result.message || 'Invalid or expired OTP.')
+      }
+    } catch (_) {
+      setError('Network error. Try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+    setLoading(true)
+    try {
+      const result = await adminResetPassword(email.trim().toLowerCase(), newPassword)
+      if (result.ok) {
+        setShowForgot(false)
+        setStep(1)
+        setEmail('')
         setOtp('')
         setNewPassword('')
-        setForgotStep(1)
-        setOtpSent(false)
+        setConfirmPassword('')
+        setResendSec(0)
+        setError('Password reset successfully. Log in with your new password.')
       } else {
-        if (result.reason === 'otp_expired') setError('OTP expired. Request a new one.')
-        else if (result.reason === 'invalid_otp') setError('Invalid OTP. Check the code and try again.')
-        else setError('Could not reset password. Try again.')
+        setError(result.message || 'Failed to reset password.')
       }
     } catch (_) {
       setError('Network error. Try again.')
@@ -113,12 +140,13 @@ export default function AdminLoginPage() {
 
   const closeForgot = () => {
     setShowForgot(false)
-    setForgotStep(1)
-    setOtpSent(false)
+    setStep(1)
+    setEmail('')
     setOtp('')
     setNewPassword('')
+    setConfirmPassword('')
     setError('')
-    setResetSuccess(false)
+    setResendSec(0)
   }
 
   return (
@@ -143,7 +171,7 @@ export default function AdminLoginPage() {
 
           {!showForgot ? (
             <>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label htmlFor="admin-password" className="block text-sm font-medium text-primary mb-1">
                     Password
@@ -160,19 +188,22 @@ export default function AdminLoginPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-red-600 text-sm">{error}</p>
+                  <p className={`text-sm ${error.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>{error}</p>
                 )}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-xl font-heading font-semibold bg-accent text-primary hover:bg-[#e8914a] transition-colors disabled:opacity-70"
+                  className="w-full py-3 rounded-xl font-heading font-semibold bg-accent text-primary hover:bg-[#e8914a] transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
                 >
+                  {loading && (
+                    <span className="inline-block w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  )}
                   {loading ? 'Checking...' : 'Login'}
                 </button>
                 <p className="text-center mt-3">
                   <button
                     type="button"
-                    onClick={() => { setShowForgot(true); setError('') }}
+                    onClick={() => { setShowForgot(true); setError(''); setStep(1); setEmail(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); }}
                     className="text-sm text-primary/60 hover:text-accent transition-colors"
                   >
                     Forgot password?
@@ -182,51 +213,55 @@ export default function AdminLoginPage() {
             </>
           ) : (
             <div className="space-y-4">
-              {resetSuccess ? (
+              {!hasApi() ? (
                 <>
-                  <p className="text-green-600 text-sm font-medium text-center">
-                    Password reset successfully. Log in with your new password.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={closeForgot}
-                    className="w-full py-3 rounded-xl font-heading font-semibold bg-accent text-primary"
-                  >
+                  <div className="space-y-2 text-primary/90 text-sm">
+                    <p className="font-medium">Backend not connected</p>
+                    <p>1. In Vercel: your project → <strong>Settings</strong> → <strong>Environment Variables</strong>.</p>
+                    <p>2. Add: <strong>Name</strong> = <code className="bg-primary/10 px-1 rounded">VITE_API_URL</code>, <strong>Value</strong> = your backend URL (e.g. <code className="bg-primary/10 px-1 rounded">https://travel-5bcz.onrender.com</code>). No slash at the end.</p>
+                    <p>3. Save and <strong>Redeploy</strong> the project. Then try Forgot password again.</p>
+                  </div>
+                  <button type="button" onClick={closeForgot} className="w-full py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium mt-3">
                     Back to Login
                   </button>
                 </>
-              ) : hasApi() ? (
+              ) : (
                 <>
-                  {forgotStep === 1 && (
-                    <>
-                      <p className="text-primary/90 text-sm">
-                        We will send a 6-digit OTP to your recovery email{recoveryEmailMask ? ` (${recoveryEmailMask})` : ''}. Enter the OTP and set a new password in the next step.
-                      </p>
+                  {step === 1 && (
+                    <form onSubmit={handleSendOtp} className="space-y-4">
+                      <p className="text-primary/90 text-sm">Enter your admin email. We will send a 6-digit OTP.</p>
+                      <div>
+                        <label htmlFor="forgot-email" className="block text-sm font-medium text-primary mb-1">Email</label>
+                        <input
+                          id="forgot-email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="admin@example.com"
+                          className="w-full px-4 py-3 rounded-xl border border-primary/20 text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                          required
+                        />
+                      </div>
                       {error && <p className="text-red-600 text-sm">{error}</p>}
                       <div className="flex gap-2">
                         <button
-                          type="button"
-                          onClick={handleSendOtp}
+                          type="submit"
                           disabled={loading}
-                          className="flex-1 py-3 rounded-xl font-heading font-semibold bg-accent text-primary hover:bg-[#e8914a] disabled:opacity-70"
+                          className="flex-1 py-3 rounded-xl font-heading font-semibold bg-accent text-primary hover:bg-[#e8914a] disabled:opacity-70 flex items-center justify-center gap-2"
                         >
-                          {loading ? 'Sending...' : 'Send OTP to email'}
+                          {loading && <span className="inline-block w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}
+                          {loading ? 'Sending...' : 'Send OTP'}
                         </button>
-                        <button
-                          type="button"
-                          onClick={closeForgot}
-                          className="px-4 py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium"
-                        >
+                        <button type="button" onClick={closeForgot} className="px-4 py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium">
                           Back
                         </button>
                       </div>
-                    </>
+                    </form>
                   )}
-                  {forgotStep === 2 && (
-                    <form onSubmit={handleVerifyOtpAndReset} className="space-y-4">
-                      <p className="text-primary/90 text-sm">
-                        Check your inbox (and spam) for the OTP. Enter it below with your new password.
-                      </p>
+
+                  {step === 2 && (
+                    <form onSubmit={handleVerifyOtp} className="space-y-4">
+                      <p className="text-primary/90 text-sm">Check your inbox for the OTP and enter it below.</p>
                       <div>
                         <label htmlFor="forgot-otp" className="block text-sm font-medium text-primary mb-1">OTP</label>
                         <input
@@ -240,14 +275,54 @@ export default function AdminLoginPage() {
                           className="w-full px-4 py-3 rounded-xl border border-primary/20 text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent"
                         />
                       </div>
+                      {error && <p className="text-red-600 text-sm">{error}</p>}
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="flex-1 py-3 rounded-xl font-heading font-semibold bg-accent text-primary hover:bg-[#e8914a] disabled:opacity-70 flex items-center justify-center gap-2 min-w-[120px]"
+                        >
+                          {loading && <span className="inline-block w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}
+                          {loading ? 'Verifying...' : 'Verify OTP'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSendOtp}
+                          disabled={loading || resendSec > 0}
+                          className="px-4 py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium disabled:opacity-50"
+                        >
+                          {resendSec > 0 ? `Resend OTP (${resendSec}s)` : 'Resend OTP'}
+                        </button>
+                        <button type="button" onClick={() => { setStep(1); setOtp(''); setError(''); }} className="px-4 py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium">
+                          Back
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {step === 3 && (
+                    <form onSubmit={handleResetPassword} className="space-y-4">
+                      <p className="text-primary/90 text-sm">Enter your new password (min 6 characters).</p>
                       <div>
-                        <label htmlFor="forgot-new-password" className="block text-sm font-medium text-primary mb-1">New password</label>
+                        <label htmlFor="new-password" className="block text-sm font-medium text-primary mb-1">New password</label>
                         <input
-                          id="forgot-new-password"
+                          id="new-password"
                           type="password"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           placeholder="Min 6 characters"
+                          minLength={6}
+                          className="w-full px-4 py-3 rounded-xl border border-primary/20 text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="confirm-password" className="block text-sm font-medium text-primary mb-1">Confirm password</label>
+                        <input
+                          id="confirm-password"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Confirm new password"
                           minLength={6}
                           className="w-full px-4 py-3 rounded-xl border border-primary/20 text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent"
                         />
@@ -257,32 +332,17 @@ export default function AdminLoginPage() {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="flex-1 py-3 rounded-xl font-heading font-semibold bg-accent text-primary hover:bg-[#e8914a] disabled:opacity-70"
+                          className="flex-1 py-3 rounded-xl font-heading font-semibold bg-accent text-primary hover:bg-[#e8914a] disabled:opacity-70 flex items-center justify-center gap-2"
                         >
-                          {loading ? 'Resetting...' : 'Verify OTP & set password'}
+                          {loading && <span className="inline-block w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}
+                          {loading ? 'Resetting...' : 'Reset password'}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => { setForgotStep(1); setOtp(''); setNewPassword(''); setError(''); }}
-                          className="px-4 py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium"
-                        >
+                        <button type="button" onClick={() => { setStep(2); setNewPassword(''); setConfirmPassword(''); setError(''); }} className="px-4 py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium">
                           Back
                         </button>
                       </div>
                     </form>
                   )}
-                </>
-              ) : (
-                <>
-                  <p className="text-primary/90 text-sm font-medium mb-2">OTP reset needs the backend to be configured.</p>
-                  <ul className="text-primary/80 text-sm list-disc list-inside space-y-1 mb-4">
-                    <li><strong>Frontend (Vercel):</strong> Add <code className="bg-primary/10 px-1 rounded">VITE_API_URL</code> = your backend URL (e.g. <code className="bg-primary/10 px-1 rounded">https://your-api.railway.app</code>)</li>
-                    <li><strong>Backend (.env):</strong> Add <code className="bg-primary/10 px-1 rounded">ADMIN_RECOVERY_EMAIL</code>, <code className="bg-primary/10 px-1 rounded">GMAIL_USER</code>, <code className="bg-primary/10 px-1 rounded">GMAIL_APP_PASSWORD</code></li>
-                  </ul>
-                  <p className="text-primary/70 text-xs">Redeploy the frontend after changing VITE_API_URL. Then use &quot;Forgot password?&quot; again to send OTP to your recovery email.</p>
-                  <button type="button" onClick={closeForgot} className="w-full py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium mt-3">
-                    Back to Login
-                  </button>
                 </>
               )}
             </div>

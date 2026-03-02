@@ -88,7 +88,6 @@ export async function forgotPasswordApi() {
 
 export async function verifyOtpResetApi(otp, newPassword) {
   if (!hasApi()) return { ok: false, reason: 'no_api' }
-  // Client only sends OTP + new password (plain). Backend hashes and stores; no client-side crypto.
   try {
     const res = await fetch(apiUrl('/api/auth/verify-otp-reset'), {
       method: 'POST',
@@ -99,6 +98,52 @@ export async function verifyOtpResetApi(otp, newPassword) {
     return { ok: data.ok === true, reason: data.reason }
   } catch (_) {
     return { ok: false, reason: 'network' }
+  }
+}
+
+// New admin forgot-password flow: /api/admin/send-otp, verify-otp, reset-password
+export async function adminSendOtp(email) {
+  if (!hasApi()) return { ok: false, message: 'Backend not configured' }
+  try {
+    const res = await fetch(apiUrl('/api/admin/send-otp'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: String(email).trim().toLowerCase() }),
+    })
+    const data = await res.json()
+    return { ok: res.ok && data.ok === true, message: data.message, status: res.status }
+  } catch (_) {
+    return { ok: false, message: 'Network error' }
+  }
+}
+
+export async function adminVerifyOtp(email, otp) {
+  if (!hasApi()) return { ok: false, message: 'Backend not configured' }
+  try {
+    const res = await fetch(apiUrl('/api/admin/verify-otp'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: String(email).trim().toLowerCase(), otp: String(otp).trim() }),
+    })
+    const data = await res.json()
+    return { ok: res.ok && data.ok === true, message: data.message, status: res.status }
+  } catch (_) {
+    return { ok: false, message: 'Network error' }
+  }
+}
+
+export async function adminResetPassword(email, newPassword) {
+  if (!hasApi()) return { ok: false, message: 'Backend not configured' }
+  try {
+    const res = await fetch(apiUrl('/api/admin/reset-password'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: String(email).trim().toLowerCase(), newPassword: String(newPassword).trim() }),
+    })
+    const data = await res.json()
+    return { ok: res.ok && data.ok === true, message: data.message, status: res.status }
+  } catch (_) {
+    return { ok: false, message: 'Network error' }
   }
 }
 

@@ -7,6 +7,7 @@ import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
 import authRoutes from './routes/auth.js'
+import adminAuthRoutes from './routes/adminAuthRoutes.js'
 import contentRoutes from './routes/content.js'
 import formsRoutes from './routes/forms.js'
 import reviewsRoutes from './routes/reviews.js'
@@ -34,6 +35,7 @@ app.use(cors({ origin: frontendOrigin, credentials: true }))
 app.use(express.json({ limit: '2mb' }))
 
 app.use('/api/auth', authRoutes)
+app.use('/api/admin', adminAuthRoutes)
 app.use('/api/content', requireDb, contentRoutes)
 app.use('/api', requireDb, formsRoutes)
 app.use('/api/reviews', requireDb, reviewsRoutes)
@@ -51,15 +53,12 @@ async function start() {
     } catch (err) {
       console.error('MongoDB connection error:', err.message)
       if (err.message.includes('bad auth')) {
-        console.error('')
-        console.error('Bad auth = Atlas rejected username or password.')
-        console.error('1. MongoDB Atlas → Database Access → your user → Edit → Edit Password')
-        console.error('2. Set a NEW password (e.g. SimplePass123) and save')
-        console.error('3. In backend/.env set MONGODB_PASSWORD=SimplePass123 (the new password)')
-        console.error('4. Restart: npm run dev')
-        console.error('')
+        console.error('Fix: Atlas → Database Access → Edit user password, then set MONGODB_PASSWORD in Render env.')
+      } else if (err.message.includes('ENOTFOUND') || err.message.includes('ETIMEDOUT') || err.message.includes('ECONNREFUSED')) {
+        console.error('Fix: Atlas → Network Access → Add IP Address → Allow access from anywhere (0.0.0.0/0) so Render can connect.')
       }
-      process.exit(1)
+      console.error('Server starting without DB. Content/forms/reviews will return 503 until MongoDB connects.')
+      // Do not exit – so Render deploy succeeds and you can fix Atlas, then redeploy
     }
   } else {
     console.warn('MONGODB_URI not set – content and forms will not persist')
