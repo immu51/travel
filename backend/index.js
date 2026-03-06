@@ -30,7 +30,11 @@ function getMongoUri() {
 const MONGODB_URI = getMongoUri()
 
 const app = express()
-const frontendOrigin = (process.env.FRONTEND_ORIGIN || '').trim().replace(/,\s*$/, '') || true
+// Allow multiple origins: set FRONTEND_ORIGIN to comma-separated URLs, or leave empty to allow any
+const originStr = (process.env.FRONTEND_ORIGIN || '').trim()
+const frontendOrigin = originStr
+  ? originStr.split(',').map((o) => o.trim()).filter(Boolean)
+  : true
 app.use(cors({ origin: frontendOrigin, credentials: true }))
 app.use(express.json({ limit: '2mb' }))
 
