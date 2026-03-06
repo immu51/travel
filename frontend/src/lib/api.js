@@ -1,9 +1,11 @@
 /**
  * Backend API client. Uses VITE_API_URL (no localhost hardcode).
  * When VITE_API_URL is set, use backend for content, forms, reviews; else fallback to localStorage/Formspree.
+ * Production fallback: if env is missing in build, use known Railway URL so admin login still works.
  */
-
-const BASE = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '')
+const BASE_RAW = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '')
+const PROD_FALLBACK = 'https://travel-production-f211.up.railway.app'
+const BASE = BASE_RAW || (import.meta.env.PROD ? PROD_FALLBACK : '')
 
 export function hasApi() {
   return !!BASE

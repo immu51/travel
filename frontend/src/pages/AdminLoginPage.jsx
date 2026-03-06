@@ -218,7 +218,7 @@ export default function AdminLoginPage() {
                   <div className="space-y-2 text-primary/90 text-sm">
                     <p className="font-medium">Backend not connected</p>
                     <p>1. In Vercel: your project → <strong>Settings</strong> → <strong>Environment Variables</strong>.</p>
-                    <p>2. Add: <strong>Name</strong> = <code className="bg-primary/10 px-1 rounded">VITE_API_URL</code>, <strong>Value</strong> = your backend URL (e.g. <code className="bg-primary/10 px-1 rounded">https://travel-5bcz.onrender.com</code>). No slash at the end.</p>
+                    <p>2. Add: <strong>Name</strong> = <code className="bg-primary/10 px-1 rounded">VITE_API_URL</code>, <strong>Value</strong> = your backend URL (e.g. <code className="bg-primary/10 px-1 rounded">https://travel-production-f211.up.railway.app</code>). No slash at the end.</p>
                     <p>3. Save and <strong>Redeploy</strong> the project. Then try Forgot password again.</p>
                   </div>
                   <button type="button" onClick={closeForgot} className="w-full py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium mt-3">
