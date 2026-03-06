@@ -49,6 +49,8 @@ export default function AdminLoginPage() {
       }
       if (result.reason === 'not_configured') {
         setError('Backend URL not in build. In Vercel: add VITE_API_URL = your Railway URL (e.g. https://travel-production-f211.up.railway.app) for Production, then redeploy.')
+      } else if (result.reason === 'network') {
+        setError('Cannot reach backend. Check that Railway is running and try again.')
       } else {
         setError('Invalid password. Use "Forgot password?" to reset.')
       }

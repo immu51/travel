@@ -39,9 +39,19 @@ async function sha256(message) {
 
 /**
  * Returns: { ok: true } on success, { ok: false, reason: 'invalid' } on wrong password,
- * { ok: false, reason: 'not_configured' } when no API and VITE_ADMIN_PASSWORD_HASH not set.
+ * { ok: false, reason: 'network' } when backend unreachable, { ok: false, reason: 'not_configured' } when local and no hash.
  */
 export async function verifyAdminPassword(password) {
+  // On production domain (e.g. Vercel), always try Railway backend first so we never show "not_configured"
+  if (isProductionHost()) {
+    try {
+      const result = await loginWithBackend(PROD_BACKEND, password)
+      if (result.ok) return result
+      return { ok: false, reason: result.reason || 'invalid' }
+    } catch (_) {
+      return { ok: false, reason: 'network' }
+    }
+  }
   if (hasApi()) {
     const result = await loginWithApi(password)
     if (!result) return { ok: false, reason: 'invalid' }
@@ -50,13 +60,6 @@ export async function verifyAdminPassword(password) {
       return { ok: true }
     }
     return { ok: false, reason: result.reason || 'invalid' }
-  }
-  if (isProductionHost()) {
-    try {
-      return await loginWithBackend(PROD_BACKEND, password)
-    } catch (_) {
-      /* fall through to not_configured or hash check */
-    }
   }
   const storedHash = (import.meta.env.VITE_ADMIN_PASSWORD_HASH || '').trim().toLowerCase()
   if (!storedHash) return { ok: false, reason: 'not_configured' }
