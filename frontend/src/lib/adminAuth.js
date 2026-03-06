@@ -1,12 +1,34 @@
 /**
  * Admin authentication: when VITE_API_URL is set, uses backend login (JWT);
  * otherwise SHA-256 + local token. Set VITE_ADMIN_PASSWORD_HASH for local-only auth.
+ * When on production domain (e.g. Vercel) but env missing in build, use known Railway URL.
  */
 
 import { hasApi, loginWithApi } from './api.js'
 
 const ADMIN_TOKEN_KEY = 'traverrax_admin_token'
 const TOKEN_PREFIX = 'admin_'
+const PROD_BACKEND = 'https://travel-production-f211.up.railway.app'
+
+function isProductionHost() {
+  if (typeof window === 'undefined' || !window.location) return false
+  const h = window.location.hostname || ''
+  return h !== '' && !/localhost|127\.0\.0\.1/.test(h)
+}
+
+async function loginWithBackend(baseUrl, password) {
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: String(password).trim() }),
+  })
+  const data = await res.json()
+  if (data?.ok && data?.token) {
+    setAdminToken(data.token)
+    return { ok: true }
+  }
+  return { ok: false, reason: data?.reason || 'invalid' }
+}
 
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message)
@@ -28,6 +50,13 @@ export async function verifyAdminPassword(password) {
       return { ok: true }
     }
     return { ok: false, reason: result.reason || 'invalid' }
+  }
+  if (isProductionHost()) {
+    try {
+      return await loginWithBackend(PROD_BACKEND, password)
+    } catch (_) {
+      /* fall through to not_configured or hash check */
+    }
   }
   const storedHash = (import.meta.env.VITE_ADMIN_PASSWORD_HASH || '').trim().toLowerCase()
   if (!storedHash) return { ok: false, reason: 'not_configured' }
