@@ -1,12 +1,23 @@
 /**
  * Create or update the first Admin (for forgot-password flow).
- * Run: node scripts/createAdmin.js
- * Requires in .env: ADMIN_EMAIL, ADMIN_PASSWORD, and MongoDB connection vars.
+ * Run: node scripts/createAdmin.js (from backend folder or with backend as cwd)
+ * Requires: ADMIN_EMAIL, ADMIN_PASSWORD, and MongoDB connection (MONGODB_URI or MONGODB_USER+PASSWORD+CLUSTER).
  */
 import 'dotenv/config'
 import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 import Admin from '../models/Admin.js'
+
+function getMongoUri() {
+  const user = (process.env.MONGODB_USER || '').trim()
+  const password = (process.env.MONGODB_PASSWORD || '').trim()
+  const cluster = (process.env.MONGODB_CLUSTER || '').trim()
+  const db = (process.env.MONGODB_DB || 'travel').trim()
+  if (user && password && cluster) {
+    return `mongodb+srv://${user}:${encodeURIComponent(password)}@${cluster}/${db}?retryWrites=true&w=majority`
+  }
+  return (process.env.MONGODB_URI || process.env.MONGO_URI || '').trim()
+}
 
 const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase()
 const password = (process.env.ADMIN_PASSWORD || '').trim()
@@ -16,9 +27,9 @@ async function run() {
     console.error('Set ADMIN_EMAIL and ADMIN_PASSWORD in .env')
     process.exit(1)
   }
-  const uri = process.env.MONGODB_URI || process.env.MONGO_URI
-  if (!uri) {
-    console.error('Set MONGODB_URI or MONGO_URI in .env')
+  const uri = getMongoUri()
+  if (!uri || !uri.startsWith('mongodb')) {
+    console.error('Set MONGODB_URI (or MONGODB_USER, MONGODB_PASSWORD, MONGODB_CLUSTER) in .env')
     process.exit(1)
   }
   await mongoose.connect(uri)

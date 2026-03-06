@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
         return
       }
       if (result.reason === 'not_configured') {
-        setError('Admin login not configured. Set VITE_API_URL and create admin (see backend scripts/createAdmin.js).')
+        setError('Backend URL not in build. In Vercel: add VITE_API_URL = your Railway URL (e.g. https://travel-production-f211.up.railway.app) for Production, then redeploy.')
       } else {
         setError('Invalid password. Use "Forgot password?" to reset.')
       }
@@ -77,7 +77,7 @@ export default function AdminLoginPage() {
         setError(result.message || 'Could not send OTP.')
       }
     } catch (_) {
-      setError('Network error. Is the backend running?')
+      setError('Network error. Check VITE_API_URL and that the backend is running.')
     } finally {
       setLoading(false)
     }

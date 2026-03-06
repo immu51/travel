@@ -25,17 +25,19 @@ function getMongoUri() {
     const encoded = encodeURIComponent(password)
     return `mongodb+srv://${user}:${encoded}@${cluster}/${db}?retryWrites=true&w=majority`
   }
-  return (process.env.MONGODB_URI || '').trim()
+  let uri = (process.env.MONGODB_URI || '').trim()
+  // If value was pasted as "MONGODB_URI=mongodb+srv://...", use only the URI part
+  const srv = uri.indexOf('mongodb+srv://')
+  const plain = uri.indexOf('mongodb://')
+  if (srv >= 0) uri = uri.substring(srv)
+  else if (plain >= 0) uri = uri.substring(plain)
+  return uri
 }
 const MONGODB_URI = getMongoUri()
 
 const app = express()
-// Allow multiple origins: set FRONTEND_ORIGIN to comma-separated URLs, or leave empty to allow any
-const originStr = (process.env.FRONTEND_ORIGIN || '').trim()
-const frontendOrigin = originStr
-  ? originStr.split(',').map((o) => o.trim()).filter(Boolean)
-  : true
-app.use(cors({ origin: frontendOrigin, credentials: true }))
+// Allow any origin so Vercel/Railway work without CORS issues (backend has no auth on these routes)
+app.use(cors({ origin: true, credentials: true }))
 app.use(express.json({ limit: '2mb' }))
 
 app.use('/api/auth', authRoutes)
@@ -44,6 +46,7 @@ app.use('/api/content', requireDb, contentRoutes)
 app.use('/api', requireDb, formsRoutes)
 app.use('/api/reviews', requireDb, reviewsRoutes)
 
+app.get('/', (_, res) => res.json({ ok: true, service: 'Travel API' }))
 app.get('/api/health', (_, res) => res.json({ ok: true }))
 
 async function start() {
@@ -67,7 +70,7 @@ async function start() {
   } else {
     console.warn('MONGODB_URI not set – content and forms will not persist')
   }
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+  app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`))
 }
 
 start().catch(console.error)

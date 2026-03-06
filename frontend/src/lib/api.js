@@ -103,17 +103,29 @@ export async function verifyOtpResetApi(otp, newPassword) {
 
 // New admin forgot-password flow: /api/admin/send-otp, verify-otp, reset-password
 export async function adminSendOtp(email) {
-  if (!hasApi()) return { ok: false, message: 'Backend not configured' }
+  if (!hasApi()) return { ok: false, message: 'Backend not configured. Set VITE_API_URL in Vercel and redeploy.' }
+  const url = apiUrl('/api/admin/send-otp')
   try {
-    const res = await fetch(apiUrl('/api/admin/send-otp'), {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: String(email).trim().toLowerCase() }),
     })
-    const data = await res.json()
-    return { ok: res.ok && data.ok === true, message: data.message, status: res.status }
-  } catch (_) {
-    return { ok: false, message: 'Network error' }
+    let data
+    try {
+      data = await res.json()
+    } catch {
+      return { ok: false, message: `Backend returned ${res.status}. Check Railway logs.` }
+    }
+    return { ok: res.ok && data.ok === true, message: data.message || data.error, status: res.status }
+  } catch (e) {
+    const msg = e?.message || ''
+    const base = BASE || '(VITE_API_URL not set – set in Vercel and redeploy)'
+    const healthHint = BASE ? ` Open ${BASE}/api/health in a tab to confirm it’s up.` : ''
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      return { ok: false, message: `Cannot reach backend at ${base}.${healthHint}` }
+    }
+    return { ok: false, message: 'Network error. ' + (msg ? String(msg).slice(0, 80) : base) }
   }
 }
 
