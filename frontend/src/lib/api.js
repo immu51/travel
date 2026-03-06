@@ -1,20 +1,26 @@
 /**
  * Backend API client. Uses VITE_API_URL (no localhost hardcode).
  * When VITE_API_URL is set, use backend for content, forms, reviews; else fallback to localStorage/Formspree.
- * Production fallback: if env is missing in build, use known Railway URL so admin login still works.
+ * Production fallback: when running on a non-localhost host, use Railway URL if env is missing.
  */
-const BASE_RAW = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '')
 const PROD_FALLBACK = 'https://travel-production-f211.up.railway.app'
-const isLocalhost = typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location?.hostname || '')
-const BASE = BASE_RAW || (!isLocalhost ? PROD_FALLBACK : '')
+
+function getBase() {
+  const raw = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '')
+  if (raw) return raw
+  if (typeof window !== 'undefined' && window.location && !/localhost|127\.0\.0\.1/.test(window.location.hostname || ''))
+    return PROD_FALLBACK
+  return ''
+}
 
 export function hasApi() {
-  return !!BASE
+  return !!getBase()
 }
 
 export function apiUrl(path) {
+  const base = getBase()
   const p = path.startsWith('/') ? path : `/${path}`
-  return `${BASE}${p}`
+  return `${base}${p}`
 }
 
 export async function fetchContent() {
@@ -123,8 +129,8 @@ export async function adminSendOtp(email) {
     return { ok: res.ok && data.ok === true, message: data.message || data.error, status: res.status }
   } catch (e) {
     const msg = e?.message || ''
-    const base = BASE || '(VITE_API_URL not set – set in Vercel and redeploy)'
-    const healthHint = BASE ? ` Open ${BASE}/api/health in a tab to confirm it’s up.` : ''
+    const base = getBase() || '(VITE_API_URL not set – set in Vercel and redeploy)'
+    const healthHint = getBase() ? ` Open ${getBase()}/api/health in a tab to confirm it’s up.` : ''
     if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
       return { ok: false, message: `Cannot reach backend at ${base}.${healthHint}` }
     }
