@@ -5,7 +5,8 @@
  */
 const BASE_RAW = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '')
 const PROD_FALLBACK = 'https://travel-production-f211.up.railway.app'
-const BASE = BASE_RAW || (import.meta.env.PROD ? PROD_FALLBACK : '')
+const isLocalhost = typeof window !== 'undefined' && /localhost|127\.0\.0\.1/.test(window.location?.hostname || '')
+const BASE = BASE_RAW || (!isLocalhost ? PROD_FALLBACK : '')
 
 export function hasApi() {
   return !!BASE
