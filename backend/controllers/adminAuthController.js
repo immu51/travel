@@ -147,8 +147,11 @@ export async function resetPassword(req, res) {
     if (!email || !newPassword) {
       return res.status(400).json({ ok: false, message: 'Email and new password are required' })
     }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ ok: false, message: 'Password must be at least 6 characters' })
+    if (newPassword.length < 8) {
+      return res.status(400).json({ ok: false, message: 'Password must be at least 8 characters' })
+    }
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      return res.status(400).json({ ok: false, message: 'Password must contain at least one letter and one number' })
     }
 
     const admin = await Admin.findOne({ email })

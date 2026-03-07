@@ -19,6 +19,8 @@ export default function AdminLoginPage() {
   const [otp, setOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [resendSec, setResendSec] = useState(0)
   const navigate = useNavigate()
 
@@ -51,6 +53,8 @@ export default function AdminLoginPage() {
         setError('Backend URL not in build. In Vercel: add VITE_API_URL = your Railway URL (e.g. https://travel-production-f211.up.railway.app) for Production, then redeploy.')
       } else if (result.reason === 'network') {
         setError('Cannot reach backend. Check that Railway is running and try again.')
+      } else if (result.reason === 'too_many_attempts') {
+        setError('Too many attempts. Please try again later.')
       } else {
         setError('Invalid password. Use "Forgot password?" to reset.')
       }
@@ -110,8 +114,12 @@ export default function AdminLoginPage() {
   const handleResetPassword = async (e) => {
     e.preventDefault()
     setError('')
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters.')
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      setError('Password must contain at least one letter and one number.')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -128,6 +136,8 @@ export default function AdminLoginPage() {
         setOtp('')
         setNewPassword('')
         setConfirmPassword('')
+        setShowNewPassword(false)
+        setShowConfirmPassword(false)
         setResendSec(0)
         setError('Password reset successfully. Log in with your new password.')
       } else {
@@ -205,7 +215,7 @@ export default function AdminLoginPage() {
                 <p className="text-center mt-3">
                   <button
                     type="button"
-                    onClick={() => { setShowForgot(true); setError(''); setStep(1); setEmail(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); }}
+                    onClick={() => { setShowForgot(true); setError(''); setStep(1); setEmail(''); setOtp(''); setNewPassword(''); setConfirmPassword(''); setShowNewPassword(false); setShowConfirmPassword(false); }}
                     className="text-sm text-primary/60 hover:text-accent transition-colors"
                   >
                     Forgot password?
@@ -304,30 +314,60 @@ export default function AdminLoginPage() {
 
                   {step === 3 && (
                     <form onSubmit={handleResetPassword} className="space-y-4">
-                      <p className="text-primary/90 text-sm">Enter your new password (min 6 characters).</p>
+                      <p className="text-primary/90 text-sm">Enter your new password (min 8 characters, at least one letter and one number).</p>
                       <div>
                         <label htmlFor="new-password" className="block text-sm font-medium text-primary mb-1">New password</label>
-                        <input
-                          id="new-password"
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Min 6 characters"
-                          minLength={6}
-                          className="w-full px-4 py-3 rounded-xl border border-primary/20 text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent"
-                        />
+                        <div className="relative">
+                          <input
+                            id="new-password"
+                            type={showNewPassword ? 'text' : 'password'}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Min 8 chars, letter + number"
+                            minLength={6}
+                            className="w-full px-4 py-3 pr-12 rounded-xl border border-primary/20 text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword((s) => !s)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-primary/60 hover:text-primary focus:outline-none"
+                            title={showNewPassword ? 'Hide password' : 'Show password'}
+                            aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                          >
+                            {showNewPassword ? (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            )}
+                          </button>
+                        </div>
                       </div>
                       <div>
                         <label htmlFor="confirm-password" className="block text-sm font-medium text-primary mb-1">Confirm password</label>
-                        <input
-                          id="confirm-password"
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="Confirm new password"
-                          minLength={6}
-                          className="w-full px-4 py-3 rounded-xl border border-primary/20 text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent"
-                        />
+                        <div className="relative">
+                          <input
+                            id="confirm-password"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm new password"
+                            minLength={6}
+                            className="w-full px-4 py-3 pr-12 rounded-xl border border-primary/20 text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword((s) => !s)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-primary/60 hover:text-primary focus:outline-none"
+                            title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                          >
+                            {showConfirmPassword ? (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            )}
+                          </button>
+                        </div>
                       </div>
                       {error && <p className="text-red-600 text-sm">{error}</p>}
                       <div className="flex gap-2">
@@ -339,7 +379,7 @@ export default function AdminLoginPage() {
                           {loading && <span className="inline-block w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}
                           {loading ? 'Resetting...' : 'Reset password'}
                         </button>
-                        <button type="button" onClick={() => { setStep(2); setNewPassword(''); setConfirmPassword(''); setError(''); }} className="px-4 py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium">
+                        <button type="button" onClick={() => { setStep(2); setNewPassword(''); setConfirmPassword(''); setShowNewPassword(false); setShowConfirmPassword(false); setError(''); }} className="px-4 py-3 rounded-xl border border-primary/20 text-primary text-sm font-medium">
                           Back
                         </button>
                       </div>

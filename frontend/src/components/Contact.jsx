@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useContent } from '../context/ContentContext'
-import AnimateIn from './AnimateIn'
+import GSAPAnimateIn from './GSAPAnimateIn'
 
 const FORMSPREE_URL = (id) => `https://formspree.io/f/${id}`
 
@@ -62,19 +62,19 @@ export default function Contact() {
   return (
     <section id="contact" className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AnimateIn variant="fadeUp" className="text-center mb-4">
+        <GSAPAnimateIn variant="fadeUpStrong" className="text-center mb-4">
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">
             Contact Our Travel Agency in {cityName || 'India'}
           </h2>
-        </AnimateIn>
-        <AnimateIn variant="fadeUp" delay={100} className="text-center mb-16">
+        </GSAPAnimateIn>
+        <GSAPAnimateIn variant="fadeUp" delay={0.1} className="text-center mb-16">
           <p className="text-text/80 max-w-2xl mx-auto">
             Looking for affordable India tour packages? Contact our trusted travel experts today to plan your perfect
             vacation.
           </p>
-        </AnimateIn>
+        </GSAPAnimateIn>
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          <AnimateIn variant="slideRight">
+          <GSAPAnimateIn variant="fadeUpScale">
           <div className="card-glass card-premium rounded-card p-8">
             <h3 className="font-heading font-semibold text-xl text-primary mb-6">Send us a message</h3>
             <form onSubmit={handleContactSubmit} className="space-y-5">
@@ -133,8 +133,8 @@ export default function Contact() {
               </button>
             </form>
           </div>
-          </AnimateIn>
-          <AnimateIn variant="slideLeft" delay={150}>
+          </GSAPAnimateIn>
+          <GSAPAnimateIn variant="fadeUpScale" delay={0.12}>
           <div>
             <div className="space-y-6 mb-8">
               <div className="flex items-start gap-4">
@@ -189,7 +189,7 @@ export default function Contact() {
               />
             </div>
           </div>
-          </AnimateIn>
+          </GSAPAnimateIn>
         </div>
       </div>
     </section>

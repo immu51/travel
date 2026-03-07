@@ -17,12 +17,19 @@ html, body {
   overflow-wrap: break-word;
 }
 
-/* Hero background slider */
+/* Hero background slider + slow zoom (premium) */
 .hero-bg-slider {
   isolation: isolate;
 }
 .hero-bg-slide {
   transition: opacity 1s ease-in-out;
+}
+@keyframes heroBgZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+.hero-bg-slide.opacity-100 img {
+  animation: heroBgZoom 14s ease-out forwards;
 }
 
 /* Glassmorphism */
@@ -88,6 +95,9 @@ html, body {
 .announcement-popup-card {
   animation: popupIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+
+/* Hero: hidden until GSAP runs (avoids flash) */
+.hero-reveal { opacity: 0; }
 
 .animation-delay-100 { animation-delay: 0.1s; opacity: 0; }
 .animation-delay-200 { animation-delay: 0.2s; opacity: 0; }

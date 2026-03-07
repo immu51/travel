@@ -1,12 +1,15 @@
 /**
  * Hero: full-width background image, logo, headline, tagline, CTAs, trust strip, location pills.
+ * GSAP entrance animation (opacity + y) for performance.
  */
+import { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useImageSlider } from '../hooks/useImageSlider'
 import SliderDots from './SliderDots'
 import { scrollToSection } from '../utils/scroll'
 import Logo from './Logo'
 import { useContent } from '../context/ContentContext'
+import { gsap } from '../lib/gsap'
 
 const SLIDER_INTERVAL_MS = 5000
 
@@ -26,6 +29,22 @@ const HERO_LOCATIONS = [
 export default function Hero() {
   const { heroImages } = useContent()
   const [activeIndex, setActiveIndex] = useImageSlider(heroImages.length, SLIDER_INTERVAL_MS)
+  const contentRef = useRef(null)
+
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+    const children = el.querySelectorAll('.hero-reveal')
+    if (!children.length) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        children,
+        { opacity: 0, y: 48, scale: 0.97 },
+        { opacity: 1, y: 0, scale: 1, duration: 1, stagger: 0.12, ease: 'power3.out', overwrite: true }
+      )
+    }, el)
+    return () => ctx.revert()
+  }, [])
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -49,21 +68,21 @@ export default function Hero() {
         ))}
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-primary/75 via-primary/60 to-primary/90 z-[1]" />
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+      <div ref={contentRef} className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         <div className="text-center mb-8 md:mb-10">
           <Logo
-            className="text-white mb-6 animate-fade-in animation-delay-100"
+            className="hero-reveal text-white mb-6"
             size="lg"
             showText={true}
             layout="stacked"
           />
-          <h1 className="font-heading font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-4 animate-fade-in animation-delay-200 drop-shadow-lg">
+          <h1 className="hero-reveal font-heading font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-tight mb-4 drop-shadow-lg">
             Discover the Best of India
           </h1>
-          <p className="text-lg sm:text-xl text-white/95 max-w-3xl mx-auto mb-5 animate-fade-in animation-delay-300">
+          <p className="hero-reveal text-lg sm:text-xl text-white/95 max-w-3xl mx-auto mb-5">
             Luxury tour packages, customized for you. Family tours, honeymoons &amp; adventure trips.
           </p>
-          <div className="flex flex-wrap justify-center gap-2 animate-fade-in animation-delay-300">
+          <div className="hero-reveal flex flex-wrap justify-center gap-2">
             {HERO_LOCATIONS.map((loc) => (
               <Link
                 key={loc.slug}
@@ -76,7 +95,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center items-center animate-fade-in animation-delay-400">
+        <div className="hero-reveal flex flex-col sm:flex-row flex-wrap gap-4 justify-center items-center">
           <a
             href="#packages"
             onClick={(e) => scrollToSection(e, '#packages')}
@@ -99,7 +118,7 @@ export default function Hero() {
           </a>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-4 sm:gap-8 md:gap-12 mt-10 animate-fade-in animation-delay-500 text-white/85">
+        <div className="hero-reveal flex flex-wrap justify-center gap-4 sm:gap-8 md:gap-12 mt-10 text-white/85">
           {TRUST_ITEMS.map((item) => (
             <div key={item.icon} className="flex items-center gap-2 hero-trust-item">
               {item.icon === 'trips' && (
@@ -124,7 +143,7 @@ export default function Hero() {
           onSelect={setActiveIndex}
         />
       </div>
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 animate-fade-in animation-delay-600">
+      <div className="hero-reveal absolute bottom-6 left-1/2 -translate-x-1/2 z-10">
         <a
           href="#why-choose"
           onClick={(e) => scrollToSection(e, '#why-choose')}

@@ -54,16 +54,15 @@ export async function saveContent(overrides, token) {
 
 export async function loginWithApi(password) {
   if (!hasApi()) return null
-  // Sends plain password; backend hashes and compares. No client-side password hashing.
   try {
     const res = await fetch(apiUrl('/api/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: String(password).trim() }),
     })
-    const data = await res.json()
+    const data = await res.json().catch(() => ({}))
     if (data.ok && data.token) return { ok: true, token: data.token }
-    return { ok: false, reason: data.reason || 'invalid' }
+    return { ok: false, reason: data.reason || (res.status === 429 ? 'too_many_attempts' : 'invalid'), message: data.message }
   } catch (_) {
     return { ok: false, reason: 'invalid' }
   }
@@ -243,6 +242,49 @@ export async function addReviewApi(payload) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch (_) {
+    return null
+  }
+}
+
+export async function updateReviewApi(id, payload, token) {
+  if (!hasApi() || !token) return null
+  try {
+    const res = await fetch(apiUrl(`/api/reviews/${id}`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch (_) {
+    return null
+  }
+}
+
+export async function deleteReviewApi(id, token) {
+  if (!hasApi() || !token) return null
+  try {
+    const res = await fetch(apiUrl(`/api/reviews/${id}`), {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return res.ok
+  } catch (_) {
+    return false
+  }
+}
+
+export async function pinReviewApi(id, pinned, token) {
+  if (!hasApi() || !token) return null
+  try {
+    const res = await fetch(apiUrl(`/api/reviews/${id}/pin`), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ pinned }),
     })
     if (!res.ok) return null
     return await res.json()

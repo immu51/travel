@@ -2,6 +2,7 @@ import { Router } from 'express'
 import crypto from 'crypto'
 import nodemailer from 'nodemailer'
 import { signToken } from '../middleware/auth.js'
+import { rateLimitLogin } from '../middleware/rateLimit.js'
 import AdminSettings from '../models/AdminSettings.js'
 
 const router = Router()
@@ -108,8 +109,7 @@ router.post('/verify-otp-reset', async (req, res) => {
 })
 
 /** POST /api/auth/login – password check: DB hash first, then env */
-// Client sends plain password only. Hashing and compare done only on server.
-router.post('/login', async (req, res) => {
+router.post('/login', rateLimitLogin, async (req, res) => {
   const password = (req.body.password || '').trim()
   if (!password) {
     return res.status(400).json({ ok: false, reason: 'invalid' })

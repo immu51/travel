@@ -5,7 +5,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useContent } from '../context/ContentContext'
-import { removeAdminToken } from '../lib/adminAuth'
+import { removeAdminToken, getAdminToken } from '../lib/adminAuth'
+import { fetchReviews, updateReviewApi, deleteReviewApi, pinReviewApi } from '../lib/api'
 import { readFileAsDataUrl, readFilesAsDataUrls } from '../lib/imageUpload'
 
 const SECTIONS = [
@@ -509,14 +510,102 @@ function SocialLinksEditor() {
   )
 }
 
-function ReviewsInfo() {
+function ReviewsEditor() {
+  const token = getAdminToken()
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({ name: '', stars: 5, quote: '', image: '' })
+
+  const load = async () => {
+    setLoading(true)
+    setError('')
+    const list = await fetchReviews()
+    setReviews(Array.isArray(list) ? list : [])
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this review?')) return
+    const ok = await deleteReviewApi(id, token)
+    if (ok) setReviews((prev) => prev.filter((r) => r.id !== id))
+    else setError('Failed to delete')
+  }
+
+  const handlePin = async (id, pinned) => {
+    const updated = await pinReviewApi(id, pinned, token)
+    if (updated) setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, pinned } : r)))
+    else setError('Failed to pin/unpin')
+  }
+
+  const startEdit = (r) => {
+    setEditingId(r.id)
+    setEditForm({ name: r.name || '', stars: r.stars ?? 5, quote: r.quote || '', image: r.image || '' })
+  }
+  const cancelEdit = () => {
+    setEditingId(null)
+  }
+  const saveEdit = async () => {
+    const updated = await updateReviewApi(editingId, editForm, token)
+    if (updated) {
+      setReviews((prev) => prev.map((r) => (r.id === editingId ? { ...r, ...updated } : r)))
+      setEditingId(null)
+    } else setError('Failed to update')
+  }
+
   return (
-    <Section title="Reviews" description="Customer reviews are managed on the main website. Visitors can add reviews from the homepage; they are visible to everyone (like Google reviews).">
-      <p className="text-primary/80 mb-4">To see or manage reviews, go to the website and scroll to the &quot;Customer Reviews&quot; section. New reviews appear there for all visitors.</p>
-      <Link to="/#testimonials" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-primary text-sm font-medium hover:opacity-90">
+    <Section title="Reviews" description="Manage customer reviews: edit, delete, or pin to show at top on the website.">
+      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+      <Link to="/#testimonials" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 mb-4">
         <NavIcon type="star" className="w-4 h-4" />
         View reviews on site
       </Link>
+      {loading ? (
+        <p className="text-primary/70">Loading reviews…</p>
+      ) : reviews.length === 0 ? (
+        <p className="text-primary/70">No reviews yet. Visitors can add reviews from the homepage.</p>
+      ) : (
+        <div className="space-y-3">
+          {reviews.map((r) => (
+            <div key={r.id} className={`border rounded-lg p-3 ${r.pinned ? 'border-accent bg-accent/5' : 'border-primary/10'}`}>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-primary">{r.name || '—'}</span>
+                    {r.pinned && <span className="text-xs px-1.5 py-0.5 rounded bg-accent/20 text-accent">Pinned</span>}
+                    <span className="text-primary/70">★ {r.stars ?? 5}</span>
+                  </div>
+                  <p className="text-sm text-primary/80 mt-1 line-clamp-2">{r.quote || '—'}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button type="button" onClick={() => handlePin(r.id, !r.pinned)} className="px-2 py-1 rounded border border-primary/20 text-primary text-xs font-medium hover:bg-primary/5" title={r.pinned ? 'Unpin' : 'Pin to top'}>
+                    {r.pinned ? 'Unpin' : 'Pin'}
+                  </button>
+                  <button type="button" onClick={() => startEdit(r)} className="px-2 py-1 rounded border border-primary/20 text-primary text-xs font-medium hover:bg-primary/5">Edit</button>
+                  <button type="button" onClick={() => handleDelete(r.id)} className="px-2 py-1 rounded border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50">Delete</button>
+                </div>
+              </div>
+              {editingId === r.id && (
+                <div className="mt-3 pt-3 border-t border-primary/10 space-y-2">
+                  <input type="text" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} placeholder="Name" className="w-full px-3 py-1.5 text-sm rounded border border-primary/20" />
+                  <input type="number" min={1} max={5} value={editForm.stars} onChange={(e) => setEditForm((f) => ({ ...f, stars: Math.min(5, Math.max(1, Number(e.target.value) || 5)) }))} placeholder="Stars 1-5" className="w-full px-3 py-1.5 text-sm rounded border border-primary/20" />
+                  <textarea value={editForm.quote} onChange={(e) => setEditForm((f) => ({ ...f, quote: e.target.value }))} placeholder="Quote" rows={2} className="w-full px-3 py-1.5 text-sm rounded border border-primary/20" />
+                  <input type="text" value={editForm.image} onChange={(e) => setEditForm((f) => ({ ...f, image: e.target.value }))} placeholder="Image URL" className="w-full px-3 py-1.5 text-sm rounded border border-primary/20" />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={saveEdit} className="px-3 py-1.5 rounded bg-accent text-primary text-sm font-medium">Save</button>
+                    <button type="button" onClick={cancelEdit} className="px-3 py-1.5 rounded border border-primary/20 text-primary text-sm">Cancel</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </Section>
   )
 }
@@ -575,7 +664,7 @@ export default function AdminDashboard() {
       case 'business': return <BusinessSettingsEditor />
       case 'announcement': return <AnnouncementEditor />
       case 'social': return <SocialLinksEditor />
-      case 'reviews': return <ReviewsInfo />
+      case 'reviews': return <ReviewsEditor />
       default: return <HeroEditor />
     }
   }

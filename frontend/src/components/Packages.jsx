@@ -4,7 +4,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useContent } from '../context/ContentContext'
-import AnimateIn from './AnimateIn'
+import GSAPAnimateIn from './GSAPAnimateIn'
 import SliderDots from './SliderDots'
 import { useImageSlider } from '../hooks/useImageSlider'
 import { CONTAINER_CLASS, SECTION_PADDING } from '../constants'
@@ -113,23 +113,22 @@ export default function Packages() {
   return (
     <section id="packages" className={`${SECTION_PADDING} bg-white`}>
       <div className={CONTAINER_CLASS}>
-        <AnimateIn variant="fadeUp" className="text-center mb-4">
+        <GSAPAnimateIn variant="fadeUpStrong" className="text-center mb-4">
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">
             Popular India Tour Packages
           </h2>
-        </AnimateIn>
-        <AnimateIn variant="fadeUp" delay={100} className="text-center mb-16">
+        </GSAPAnimateIn>
+        <GSAPAnimateIn variant="fadeUp" delay={0.1} className="text-center mb-16">
           <p className="text-center text-text/80 max-w-3xl mx-auto">
             Explore our most popular India tour packages including family tour packages, honeymoon tour packages, and
             adventure trips in India. We design customized travel plans based on your preferences and budget.
           </p>
-        </AnimateIn>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {packages.map((pkg, i) => {
+        </GSAPAnimateIn>
+        <GSAPAnimateIn variant="fadeUpScale" stagger={0.1} staggerChildren=".package-card-wrap" className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {packages.map((pkg) => {
             const showOfferBadge = announcement?.enabled && announcement?.text?.trim() && announcement?.tourSlug === pkg.slug
             return (
-            <AnimateIn key={pkg.slug} variant="fadeUpScale" delay={120 + i * 70}>
-              <article className="package-card package-card-premium rounded-card overflow-hidden bg-bg shadow-soft relative">
+            <article key={pkg.slug} className="package-card-wrap package-card package-card-premium rounded-card overflow-hidden bg-bg shadow-soft relative">
                 {showOfferBadge && (
                   <div className="absolute top-3 right-3 z-10 bg-accent text-primary font-heading font-bold text-sm px-3 py-1 rounded-lg shadow-md">
                     {announcement.text.trim()}
@@ -166,10 +165,9 @@ export default function Packages() {
                   </div>
                 </div>
               </article>
-            </AnimateIn>
           )
           })}
-        </div>
+        </GSAPAnimateIn>
         <div className="text-center mt-10">
           <Link
             to="/tours"

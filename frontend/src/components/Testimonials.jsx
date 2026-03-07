@@ -3,7 +3,7 @@
  * Refetches when tab gets focus so new reviews appear. Shows aggregate rating for SEO & trust.
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
-import AnimateIn from './AnimateIn'
+import GSAPAnimateIn from './GSAPAnimateIn'
 import { CONTAINER_CLASS } from '../constants'
 import { subscribeReviews, addReview, isFirebaseEnabled } from '../lib/reviews'
 import { hasApi, fetchReviews, addReviewApi } from '../lib/api'
@@ -237,16 +237,16 @@ export default function Testimonials() {
     <section id="testimonials" className="py-20 md:py-28 bg-bg" aria-label="Customer reviews">
       <ReviewsSchema reviews={reviews} businessName="TraverraX" />
       <div className={CONTAINER_CLASS}>
-        <AnimateIn variant="fadeUp" className="text-center mb-4">
+        <GSAPAnimateIn variant="fadeUpStrong" className="text-center mb-4">
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">
             Customer Reviews
           </h2>
-        </AnimateIn>
-        <AnimateIn variant="fadeUp" delay={100} className="text-center mb-8">
+        </GSAPAnimateIn>
+        <GSAPAnimateIn variant="fadeUp" delay={0.1} className="text-center mb-8">
           <p className="text-text/80 max-w-2xl mx-auto">
             What our travelers say — publicly visible to everyone, like Google reviews. Add your own with a star rating.
           </p>
-        </AnimateIn>
+        </GSAPAnimateIn>
 
         {/* Aggregate rating (like Google) – visible when we have reviews */}
         {!loading && reviews.length > 0 && (() => {
@@ -254,19 +254,19 @@ export default function Testimonials() {
           const avg = Math.round((sum / reviews.length) * 10) / 10
           const count = reviews.length
           return (
-            <AnimateIn variant="fadeUp" delay={120} className="text-center mb-10">
+            <GSAPAnimateIn variant="fadeUpScale" delay={0.12} className="text-center mb-10">
               <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-primary/10 shadow-soft">
                 <span className="text-accent text-2xl font-heading font-bold" aria-hidden>★</span>
                 <span className="font-heading font-bold text-primary text-xl">{avg}</span>
                 <span className="text-text/70 text-sm">·</span>
                 <span className="text-text/80 text-sm">{count} {count === 1 ? 'review' : 'reviews'}</span>
               </div>
-            </AnimateIn>
+            </GSAPAnimateIn>
           )
         })()}
 
         {/* Form: add review with stars */}
-        <AnimateIn variant="fadeUpScale" delay={150} className="mb-16">
+        <GSAPAnimateIn variant="fadeUpScale" delay={0.15} className="mb-16">
           <div className="max-w-xl mx-auto p-6 md:p-8 rounded-2xl bg-white shadow-soft border border-primary/5">
             <h3 className="font-heading font-semibold text-lg text-primary mb-4">
               Write a review
@@ -323,7 +323,7 @@ export default function Testimonials() {
               </button>
             </form>
           </div>
-        </AnimateIn>
+        </GSAPAnimateIn>
 
         {/* All reviews – slider on mobile, grid on md+ */}
         {loading ? (
@@ -392,13 +392,13 @@ export default function Testimonials() {
             </div>
 
             {/* Desktop: grid */}
-            <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
-              {reviews.map((r, i) => (
-                <AnimateIn key={r.id} variant="fadeUpScale" delay={120 + i * 50}>
+            <GSAPAnimateIn variant="fadeUpScale" stagger={0.08} staggerChildren=".review-card-item" className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+              {reviews.map((r) => (
+                <div key={r.id} className="review-card-item">
                   <ReviewCard r={r} />
-                </AnimateIn>
+                </div>
               ))}
-            </div>
+            </GSAPAnimateIn>
           </>
         )}
       </div>
