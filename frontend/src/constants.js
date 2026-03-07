@@ -1,6 +1,9 @@
 /**
  * App-wide config. Replace with your details before going live.
  */
+/** Full site URL (no trailing slash). Used for canonical, OG, sitemap. Set VITE_SITE_URL in .env for production. */
+export const SITE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SITE_URL) || 'https://travel-blond-eta.vercel.app'
+
 export const WHATSAPP_NUMBER = '918279946669'
 export const CITY_NAME = 'Agra'
 export const PHONE = '+91 82799 46669'

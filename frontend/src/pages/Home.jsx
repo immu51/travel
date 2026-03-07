@@ -13,7 +13,9 @@ import Contact from '../components/Contact'
 export default function Home() {
   return (
     <>
-      <SEO />
+      <SEO
+        description="TraverraX – Best Tour & Travel Agency in India. Book Golden Triangle, Rajasthan, Kerala, Goa tours & same-day Agra Taj Mahal trips. Family & honeymoon packages. Agra, Delhi. 4.9★ reviews."
+      />
       <Hero />
       <WhyChoose />
       <Packages />

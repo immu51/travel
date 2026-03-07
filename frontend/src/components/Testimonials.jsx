@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import GSAPAnimateIn from './GSAPAnimateIn'
-import { CONTAINER_CLASS } from '../constants'
+import { CONTAINER_CLASS, SITE_URL } from '../constants'
 import { subscribeReviews, addReview, isFirebaseEnabled } from '../lib/reviews'
 import { hasApi, fetchReviews, addReviewApi } from '../lib/api'
 import ReviewsSchema from './ReviewsSchema'
@@ -235,7 +235,7 @@ export default function Testimonials() {
 
   return (
     <section id="testimonials" className="py-20 md:py-28 bg-bg" aria-label="Customer reviews">
-      <ReviewsSchema reviews={reviews} businessName="TraverraX" />
+      <ReviewsSchema reviews={reviews} businessName="TraverraX" businessUrl={SITE_URL} />
       <div className={CONTAINER_CLASS}>
         <GSAPAnimateIn variant="fadeUpStrong" className="text-center mb-4">
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-primary">

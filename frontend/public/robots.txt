@@ -1,0 +1,9 @@
+# TraverraX – Tour & Travel Agency
+User-agent: *
+Allow: /
+
+# Sitemap (update SITE_URL when you change domain)
+Sitemap: https://travel-blond-eta.vercel.app/sitemap.xml
+
+# Disallow admin area from indexing
+Disallow: /admin
