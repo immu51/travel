@@ -71,6 +71,9 @@ export default function SameDayTourDetailPage() {
                 <img
                   src={image}
                   alt={alt || title}
+                  loading="eager"
+                  fetchpriority="high"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/30" />

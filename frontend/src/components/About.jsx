@@ -56,6 +56,8 @@ export default function About() {
               <img
                 src="/images/about/team.jpg"
                 alt="Travel agency team - trusted travel experts in India"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             </div>

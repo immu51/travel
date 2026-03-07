@@ -1,6 +1,7 @@
 /**
- * App: root layout and routes. Home, Tours listing, Tour detail, Booking, Privacy, Terms. Admin (login + dashboard).
+ * App: root layout and routes. Home eager; other pages lazy-loaded for better initial load.
  */
+import { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ContentProvider } from './context/ContentContext'
 import Navbar from './components/Navbar'
@@ -9,17 +10,22 @@ import WhatsAppFloat from './components/WhatsAppFloat'
 import AnnouncementPopup from './components/AnnouncementPopup'
 import AdminProtected from './components/AdminProtected'
 import Home from './pages/Home'
-import ToursListing from './pages/ToursListing'
-import TourDetailPage from './pages/TourDetailPage'
-import SameDayToursPage from './pages/SameDayToursPage'
-import SameDayTourDetailPage from './pages/SameDayTourDetailPage'
-import CarRentalPage from './pages/CarRentalPage'
-import HotelBookingPage from './pages/HotelBookingPage'
-import BookingPage from './pages/BookingPage'
-import PrivacyPolicy from './pages/PrivacyPolicy'
-import TermsConditions from './pages/TermsConditions'
-import AdminLoginPage from './pages/AdminLoginPage'
-import AdminDashboard from './pages/AdminDashboard'
+
+const ToursListing = lazy(() => import('./pages/ToursListing'))
+const TourDetailPage = lazy(() => import('./pages/TourDetailPage'))
+const SameDayToursPage = lazy(() => import('./pages/SameDayToursPage'))
+const SameDayTourDetailPage = lazy(() => import('./pages/SameDayTourDetailPage'))
+const CarRentalPage = lazy(() => import('./pages/CarRentalPage'))
+const HotelBookingPage = lazy(() => import('./pages/HotelBookingPage'))
+const BookingPage = lazy(() => import('./pages/BookingPage'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
+const TermsConditions = lazy(() => import('./pages/TermsConditions'))
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+
+function PageFallback() {
+  return <div className="min-h-[60vh] flex items-center justify-center bg-bg" aria-hidden><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>
+}
 
 function SiteAnnouncementPopup() {
   const location = useLocation()
@@ -33,6 +39,7 @@ export default function App() {
       <ContentProvider>
         <div className="font-body text-text antialiased bg-bg">
           <SiteAnnouncementPopup />
+          <Suspense fallback={<PageFallback />}>
           <Routes>
           <Route
             path="/"
@@ -88,6 +95,7 @@ export default function App() {
           />
           <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
         </Routes>
+          </Suspense>
         </div>
       </ContentProvider>
     </BrowserRouter>

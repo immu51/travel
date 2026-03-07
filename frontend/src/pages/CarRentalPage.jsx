@@ -8,7 +8,7 @@ import SEO from '../components/SEO'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import WhatsAppFloat from '../components/WhatsAppFloat'
-import AnimateIn from '../components/AnimateIn'
+import GSAPAnimateIn from '../components/GSAPAnimateIn'
 import { CONTAINER_CLASS, SECTION_PADDING } from '../constants'
 import { hasApi, submitCarRental } from '../lib/api'
 
@@ -201,14 +201,14 @@ export default function CarRentalPage() {
         {/* Hero strip */}
         <section className="pt-24 pb-8 md:pt-28 bg-white border-b border-primary/5">
           <div className={CONTAINER_CLASS}>
-            <AnimateIn variant="fadeUp">
+            <GSAPAnimateIn variant="fadeUpStrong" className="space-y-2">
               <h1 className="font-heading font-extrabold text-3xl md:text-4xl text-primary">
                 Rent a Car or Hire a Cab
               </h1>
-              <p className="text-text/80 mt-2 max-w-xl">
+              <p className="text-text/80 max-w-xl">
                 From city drops to outstation runs—pick your ride, share pickup & drop, we handle the rest.
               </p>
-            </AnimateIn>
+            </GSAPAnimateIn>
           </div>
         </section>
 
@@ -218,13 +218,13 @@ export default function CarRentalPage() {
             <div className="grid lg:grid-cols-5 gap-10 lg:gap-14">
               {/* Left: Our Service + Our Travel Fleets */}
               <div className="lg:col-span-3 space-y-8">
-                <AnimateIn variant="fadeUp">
+                <GSAPAnimateIn variant="fadeUpStrong">
                   <p className="text-accent font-semibold text-sm uppercase tracking-wide">What we do</p>
                   <h2 className="font-heading font-bold text-2xl md:text-3xl text-primary mt-1">
                     Cabs &amp; Cars When You Need Them
                   </h2>
-                </AnimateIn>
-                <AnimateIn variant="fadeUp" delay={80}>
+                </GSAPAnimateIn>
+                <GSAPAnimateIn variant="fadeUp" delay={0.08}>
                   <div className="text-text/90 space-y-4 text-sm md:text-base leading-relaxed">
                     <p>
                       Whether you need a sedan for a meeting, an SUV for a family trip, or a traveller for a group—we line up the right vehicle and a verified driver. All cars are AC, insured, and maintained so your ride is safe and comfortable.
@@ -233,35 +233,37 @@ export default function CarRentalPage() {
                       We also arrange airport pickups, station drops, and outstation one-way or round trips. Tell us your route and date; we’ll confirm availability and send you a clear quote—no hidden charges.
                     </p>
                   </div>
-                </AnimateIn>
-                <AnimateIn variant="fadeUp" delay={120}>
+                </GSAPAnimateIn>
+                <GSAPAnimateIn variant="fadeUpScale" delay={0.12} stagger={0.1} staggerChildren=".car-fleet-card-wrap">
                   <h3 className="font-heading font-bold text-xl md:text-2xl text-primary mb-6">
                     Choose Your Ride
                   </h3>
                   <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                    {FLEETS.map((fleet, i) => (
-                      <AnimateIn key={fleet.id} variant="fadeUpScale" delay={160 + i * 90}>
-                        <div className="car-fleet-card group rounded-2xl overflow-hidden bg-bg shadow-soft border border-primary/5">
+                    {FLEETS.map((fleet) => (
+                      <div key={fleet.id} className="car-fleet-card-wrap">
+                        <div className="car-fleet-card group rounded-2xl overflow-hidden bg-bg shadow-soft border border-primary/5 hover:shadow-glass transition-shadow duration-300">
                           <div className="aspect-[4/3] overflow-hidden">
                             <img
                               src={fleet.image}
                               alt={fleet.alt}
-                              className="car-fleet-img w-full h-full object-cover"
+                              loading="lazy"
+                              decoding="async"
+                              className="car-fleet-img w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                           </div>
                           <p className="font-heading font-semibold text-primary text-sm md:text-base mt-2 px-1">
                             {fleet.title}
                           </p>
                         </div>
-                      </AnimateIn>
+                      </div>
                     ))}
                   </div>
-                </AnimateIn>
+                </GSAPAnimateIn>
               </div>
 
               {/* Right: Hire a Taxi form - light teal panel */}
               <div className="lg:col-span-2">
-                <AnimateIn variant="slideLeft" delay={150}>
+                <GSAPAnimateIn variant="fadeUpScale" delay={0.15}>
                   <div className="car-form-panel rounded-2xl bg-[#e8f4f8] border border-primary/10 shadow-soft p-6 md:p-8 sticky top-24">
                     <h3 className="font-heading font-bold text-xl md:text-2xl text-primary mb-6">
                       Get a Quote
@@ -396,7 +398,7 @@ export default function CarRentalPage() {
                       </button>
                     </form>
                   </div>
-                </AnimateIn>
+                </GSAPAnimateIn>
               </div>
             </div>
           </div>
@@ -405,20 +407,20 @@ export default function CarRentalPage() {
         {/* Our Other Services */}
         <section className={`${SECTION_PADDING} bg-bg`}>
           <div className={CONTAINER_CLASS}>
-            <AnimateIn variant="fadeUp" className="mb-10">
+            <GSAPAnimateIn variant="fadeUpStrong" className="mb-10">
               <h2 className="font-heading font-bold text-2xl md:text-3xl text-primary">
                 Also Check Out
               </h2>
               <p className="text-text/70 mt-2 text-sm">Hotels, tours &amp; local guides—all in one place.</p>
-            </AnimateIn>
-            <div className="grid md:grid-cols-3 gap-6">
-              {OTHER_SERVICES.map((item, i) => (
-                <AnimateIn key={item.label} variant="fadeUpScale" delay={100 + i * 80}>
-                  <Link
-                    to={item.href}
-                    state={item.state}
-                    className="car-other-card flex flex-col items-center p-8 rounded-2xl bg-white shadow-soft border border-primary/5 text-center"
-                  >
+            </GSAPAnimateIn>
+            <GSAPAnimateIn variant="fadeUpScale" stagger={0.12} staggerChildren=".car-other-card-wrap" className="grid md:grid-cols-3 gap-6">
+              {OTHER_SERVICES.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  state={item.state}
+                  className="car-other-card-wrap car-other-card flex flex-col items-center p-8 rounded-2xl bg-white shadow-soft border border-primary/5 text-center hover:shadow-glass hover:-translate-y-1 transition-all duration-300"
+                >
                     <div className="car-other-icon w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 text-primary">
                       {item.icon === 'hotel' && (
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
@@ -432,9 +434,8 @@ export default function CarRentalPage() {
                     </div>
                     <span className="font-heading font-semibold text-primary">{item.label}</span>
                   </Link>
-                </AnimateIn>
               ))}
-            </div>
+            </GSAPAnimateIn>
           </div>
         </section>
       </main>

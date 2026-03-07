@@ -79,6 +79,8 @@ function ReviewCard({ r }) {
           <img
             src={r.image}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="w-12 h-12 rounded-full object-cover border-2 border-accent/30 flex-shrink-0"
           />
         ) : (
