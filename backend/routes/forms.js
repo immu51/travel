@@ -3,7 +3,7 @@ import Contact from '../models/Contact.js'
 import Booking from '../models/Booking.js'
 import HotelEnquiry from '../models/HotelEnquiry.js'
 import CarRental from '../models/CarRental.js'
-import { sendFormEmail, formBodyHtml } from '../lib/sendFormEmail.js'
+import { sendFormEmail, formBodyHtml, forwardToFormspree, getFormspreeFormIds } from '../lib/sendFormEmail.js'
 
 const router = Router()
 
@@ -18,11 +18,23 @@ router.post('/contact', async (req, res) => {
     }
     await Contact.create(data)
     try {
-      await sendFormEmail(
+      let sent = await sendFormEmail(
         null,
         `[TraverraX] Contact form: ${data.name}`,
         formBodyHtml({ Name: data.name, Email: data.email, Phone: data.phone, Message: data.message })
       )
+      if (!sent) {
+        const { carAndContact: formspreeId } = getFormspreeFormIds()
+        if (formspreeId) {
+          await forwardToFormspree(formspreeId, {
+            _subject: `[TraverraX] Contact form: ${data.name}`,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            message: data.message,
+          })
+        }
+      }
     } catch (e) {
       console.warn('Form email failed:', e?.message)
     }
@@ -45,7 +57,7 @@ router.post('/booking', async (req, res) => {
     }
     await Booking.create(data)
     try {
-      await sendFormEmail(
+      let sent = await sendFormEmail(
         null,
         `[TraverraX] Tour booking enquiry: ${data.name}`,
         formBodyHtml({
@@ -57,6 +69,20 @@ router.post('/booking', async (req, res) => {
           Message: data.message,
         })
       )
+      if (!sent) {
+        const { carAndContact: formspreeId } = getFormspreeFormIds()
+        if (formspreeId) {
+          await forwardToFormspree(formspreeId, {
+            _subject: `[TraverraX] Tour booking enquiry: ${data.name}`,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            travelDate: data.travelDate,
+            travelers: data.travelers,
+            message: data.message,
+          })
+        }
+      }
     } catch (e) {
       console.warn('Form email failed:', e?.message)
     }
@@ -82,7 +108,7 @@ router.post('/hotel', async (req, res) => {
     }
     await HotelEnquiry.create(data)
     try {
-      await sendFormEmail(
+      let sent = await sendFormEmail(
         null,
         `[TraverraX] Hotel reservation: ${data.name} – ${data.city || 'Any'}`,
         formBodyHtml({
@@ -97,6 +123,23 @@ router.post('/hotel', async (req, res) => {
           Message: data.message,
         })
       )
+      if (!sent) {
+        const { hotel: hotelFormId } = getFormspreeFormIds()
+        if (hotelFormId) {
+          await forwardToFormspree(hotelFormId, {
+            _subject: `[TraverraX] Hotel reservation: ${data.name} – ${data.city || 'Any'}`,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            checkIn: data.checkIn,
+            checkOut: data.checkOut,
+            guests: data.guests,
+            city: data.city,
+            roomType: data.roomType,
+            message: data.message,
+          })
+        }
+      }
     } catch (e) {
       console.warn('Form email failed:', e?.message)
     }
@@ -119,7 +162,7 @@ router.post('/car-rental', async (req, res) => {
     }
     await CarRental.create(data)
     try {
-      await sendFormEmail(
+      let sent = await sendFormEmail(
         null,
         `[TraverraX] Car rental / taxi: ${data.name}`,
         formBodyHtml({
@@ -131,6 +174,20 @@ router.post('/car-rental', async (req, res) => {
           Message: data.message,
         })
       )
+      if (!sent) {
+        const { carAndContact: formspreeId } = getFormspreeFormIds()
+        if (formspreeId) {
+          await forwardToFormspree(formspreeId, {
+            _subject: `[TraverraX] Car rental / taxi: ${data.name}`,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            pickupDate: data.pickupDate,
+            vehicle: data.vehicle,
+            message: data.message,
+          })
+        }
+      }
     } catch (e) {
       console.warn('Form email failed:', e?.message)
     }

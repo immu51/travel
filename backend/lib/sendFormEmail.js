@@ -119,3 +119,32 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 }
+
+/** Formspree form ID for fallback when Resend/Gmail is not configured. Set FORMSPREE_FORM_ID (and optionally FORMSPREE_HOTEL_FORM_ID) in Railway. */
+const FORMSPREE_FORM_ID = (process.env.FORMSPREE_FORM_ID || '').trim()
+const FORMSPREE_HOTEL_FORM_ID = (process.env.FORMSPREE_HOTEL_FORM_ID || '').trim()
+
+/**
+ * When sendFormEmail fails, forward submission to Formspree so admin still gets email.
+ * @param {string} formId - Formspree form ID (e.g. mdalwlnz)
+ * @param {object} payload - Flat object of field names and values (e.g. { name, email, _subject, ... })
+ * @returns {Promise<boolean>}
+ */
+export async function forwardToFormspree(formId, payload) {
+  if (!formId || !payload || typeof payload !== 'object') return false
+  try {
+    const res = await fetch(`https://formspree.io/f/${formId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    return res.ok
+  } catch (err) {
+    console.warn('Formspree forward failed:', err?.message)
+    return false
+  }
+}
+
+export function getFormspreeFormIds() {
+  return { carAndContact: FORMSPREE_FORM_ID || null, hotel: (FORMSPREE_HOTEL_FORM_ID || FORMSPREE_FORM_ID || '').trim() || null }
+}
