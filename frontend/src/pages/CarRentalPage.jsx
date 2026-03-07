@@ -75,10 +75,62 @@ export default function CarRentalPage() {
         if (ok) {
           setForm({ name: '', email: '', phone: '', arrivalDate: '', persons: '', vehicleType: '', pickup: '', drop: '', summary: '' })
           setSubmitMsg({ type: 'success', text: 'Thank you! We will get back to you shortly.' })
-        } else {
-          setSubmitMsg({ type: 'error', text: 'Could not send. Please try again or contact us on WhatsApp.' })
+          setSubmitting(false)
+          return
         }
+        // API failed (e.g. backend/DB down on localhost) – try Formspree if configured
+        if (formspreeId) {
+          const res = await fetch(FORMSPREE_URL(formspreeId), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              _subject: `Car Rental / Hire a Taxi: ${form.name}`,
+              name: form.name,
+              email: form.email,
+              phone: form.phone,
+              arrivalDate: form.arrivalDate,
+              persons: form.persons,
+              vehicleType: form.vehicleType,
+              pickup: form.pickup,
+              drop: form.drop,
+              summary: form.summary,
+            }),
+          })
+          if (res.ok) {
+            setForm({ name: '', email: '', phone: '', arrivalDate: '', persons: '', vehicleType: '', pickup: '', drop: '', summary: '' })
+            setSubmitMsg({ type: 'success', text: 'Thank you! We will get back to you shortly.' })
+            setSubmitting(false)
+            return
+          }
+        }
+        setSubmitMsg({ type: 'error', text: 'Could not send. Please try again or contact us on WhatsApp.' })
       } catch (_) {
+        if (formspreeId) {
+          try {
+            const res = await fetch(FORMSPREE_URL(formspreeId), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                _subject: `Car Rental / Hire a Taxi: ${form.name}`,
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                arrivalDate: form.arrivalDate,
+                persons: form.persons,
+                vehicleType: form.vehicleType,
+                pickup: form.pickup,
+                drop: form.drop,
+                summary: form.summary,
+              }),
+            })
+            if (res.ok) {
+              setForm({ name: '', email: '', phone: '', arrivalDate: '', persons: '', vehicleType: '', pickup: '', drop: '', summary: '' })
+              setSubmitMsg({ type: 'success', text: 'Thank you! We will get back to you shortly.' })
+              setSubmitting(false)
+              return
+            }
+          } catch (_) {}
+        }
         setSubmitMsg({ type: 'error', text: 'Could not send. Please try again or contact us on WhatsApp.' })
       } finally {
         setSubmitting(false)
