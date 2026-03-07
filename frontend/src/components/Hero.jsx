@@ -62,7 +62,7 @@ export default function Hero() {
               alt={img.alt}
               className="w-full h-full object-cover object-center"
               loading={i === 0 ? 'eager' : 'lazy'}
-              fetchPriority={i === 0 ? 'high' : undefined}
+              fetchpriority={i === 0 ? 'high' : undefined}
             />
           </div>
         ))}
