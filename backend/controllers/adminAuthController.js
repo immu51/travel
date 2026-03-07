@@ -13,9 +13,31 @@ const BCRYPT_ROUNDS = 10
 
 const GMAIL_USER = (process.env.GMAIL_USER || '').trim()
 const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || '').trim()
+const RESEND_API_KEY = (process.env.RESEND_API_KEY || '').trim()
+const RESEND_FROM = (process.env.RESEND_FROM || 'TraverraX <onboarding@resend.dev>').trim()
 
 function generateOtp() {
   return String(crypto.randomInt(100000, 999999))
+}
+
+/** Send OTP email via Resend (HTTP API – works on Railway when SMTP times out). */
+async function sendOtpViaResend(to, otp) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to: [to],
+      subject: 'TraverraX Admin – Password reset OTP',
+      html: `<p>Your OTP for password reset is: <strong>${otp}</strong>.</p><p>Valid for 5 minutes.</p><p>If you did not request this, ignore this email.</p>`,
+    }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.message || data?.msg || `Resend ${res.status}`)
+  return data
 }
 
 function sha256(text) {
@@ -44,21 +66,23 @@ export async function sendOtp(req, res) {
     admin.resetOtpExpiry = new Date(Date.now() + OTP_EXPIRY_MS)
     await admin.save()
 
+    if (RESEND_API_KEY) {
+      await sendOtpViaResend(email, otp)
+      return res.status(200).json({ ok: true, message: 'OTP sent to your email' })
+    }
+
     if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-      return res.status(503).json({ ok: false, message: 'Email service not configured' })
+      return res.status(503).json({ ok: false, message: 'Email service not configured. Set RESEND_API_KEY (recommended on Railway) or GMAIL_USER + GMAIL_APP_PASSWORD.' })
     }
 
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: GMAIL_USER,
-        pass: GMAIL_APP_PASSWORD,
-      },
-      // Force IPv4 (Railway may not have IPv6; Gmail can resolve to IPv6 and cause ENETUNREACH)
-      connectionTimeout: 10000,
-      tls: { servername: 'smtp.gmail.com' },
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+      connectionTimeout: 15000,
+      tls: { servername: 'smtp.gmail.com', rejectUnauthorized: true },
     })
     await transporter.sendMail({
       from: `"TraverraX Admin" <${GMAIL_USER}>`,
@@ -70,8 +94,9 @@ export async function sendOtp(req, res) {
 
     return res.status(200).json({ ok: true, message: 'OTP sent to your email' })
   } catch (err) {
-    console.error('sendOtp error:', err.message)
-    return res.status(500).json({ ok: false, message: 'Failed to send OTP' })
+    console.error('sendOtp error:', err.message, err.code || '')
+    const safeMsg = err.code === 'EAUTH' ? 'Invalid Gmail user or app password.' : err.message || 'Failed to send OTP. Check Railway logs.'
+    return res.status(500).json({ ok: false, message: safeMsg })
   }
 }
 
