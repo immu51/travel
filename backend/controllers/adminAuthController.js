@@ -1,8 +1,12 @@
 import crypto from 'crypto'
+import dns from 'dns'
 import bcrypt from 'bcryptjs'
 import nodemailer from 'nodemailer'
 import Admin from '../models/Admin.js'
 import AdminSettings from '../models/AdminSettings.js'
+
+// Prefer IPv4 so Gmail SMTP works on Railway (IPv6 can be ENETUNREACH)
+dns.setDefaultResultOrder('ipv4first')
 
 const OTP_EXPIRY_MS = 5 * 60 * 1000 // 5 minutes
 const BCRYPT_ROUNDS = 10
@@ -45,11 +49,16 @@ export async function sendOtp(req, res) {
     }
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: GMAIL_USER,
         pass: GMAIL_APP_PASSWORD,
       },
+      // Force IPv4 (Railway may not have IPv6; Gmail can resolve to IPv6 and cause ENETUNREACH)
+      connectionTimeout: 10000,
+      tls: { servername: 'smtp.gmail.com' },
     })
     await transporter.sendMail({
       from: `"TraverraX Admin" <${GMAIL_USER}>`,
