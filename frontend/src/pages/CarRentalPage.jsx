@@ -73,6 +73,24 @@ export default function CarRentalPage() {
           message,
         })
         if (ok) {
+          if (formspreeId) {
+            fetch(FORMSPREE_URL(formspreeId), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                _subject: `[Car Rental] ${form.name}`,
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                arrivalDate: form.arrivalDate,
+                persons: form.persons,
+                vehicleType: form.vehicleType,
+                pickup: form.pickup,
+                drop: form.drop,
+                summary: form.summary,
+              }),
+            }).catch(() => {})
+          }
           setForm({ name: '', email: '', phone: '', arrivalDate: '', persons: '', vehicleType: '', pickup: '', drop: '', summary: '' })
           setSubmitMsg({ type: 'success', text: 'Thank you! We will get back to you shortly.' })
           setSubmitting(false)

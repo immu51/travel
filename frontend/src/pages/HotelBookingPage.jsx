@@ -90,6 +90,24 @@ export default function HotelBookingPage() {
           message: form.message,
         })
         if (ok) {
+          if (formspreeId) {
+            fetch(FORMSPREE_URL(formspreeId), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                _subject: `[Hotel Reservation] ${form.name} – ${form.city || 'Any'}`,
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                checkIn: form.checkIn,
+                checkOut: form.checkOut,
+                guests: form.guests,
+                city: form.city,
+                roomType: form.roomType,
+                message: form.message,
+              }),
+            }).catch(() => {})
+          }
           setForm({ name: '', email: '', phone: '', checkIn: '', checkOut: '', guests: '', city: '', roomType: '', message: '' })
           setSubmitMsg({ type: 'success', text: 'Thank you! We will get back to you with hotel options shortly.' })
           setSubmitting(false)

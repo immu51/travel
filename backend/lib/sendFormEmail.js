@@ -131,16 +131,26 @@ const FORMSPREE_HOTEL_FORM_ID = (process.env.FORMSPREE_HOTEL_FORM_ID || '').trim
  * @returns {Promise<boolean>}
  */
 export async function forwardToFormspree(formId, payload) {
-  if (!formId || !payload || typeof payload !== 'object') return false
+  if (!formId || !payload || typeof payload !== 'object') {
+    if (!formId) console.warn('[Formspree] Forward skipped: set FORMSPREE_FORM_ID on Railway (e.g. mdalwlnz)')
+    return false
+  }
   try {
-    const res = await fetch(`https://formspree.io/f/${formId}`, {
+    const url = `https://formspree.io/f/${formId}`
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-    return res.ok
+    if (!res.ok) {
+      const text = await res.text()
+      console.warn('[Formspree] Forward failed:', res.status, formId, text?.slice(0, 100))
+      return false
+    }
+    console.log('[Formspree] Forward OK:', formId, payload._subject || '')
+    return true
   } catch (err) {
-    console.warn('Formspree forward failed:', err?.message)
+    console.warn('[Formspree] Forward error:', err?.message)
     return false
   }
 }
